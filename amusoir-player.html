@@ -17,15 +17,13 @@ body{display:flex;flex-direction:column;}
 /* JOIN */
 #join{background:radial-gradient(ellipse 120% 60% at 50% 0%,#150a30 0%,var(--bg) 70%);}
 .logo{font-family:'Outfit',sans-serif;font-size:52px;font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,var(--gold),var(--pink),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.jcard{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:24px 20px;width:100%;display:flex;flex-direction:column;gap:12px;}
+.jcard{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:24px 20px;width:100%;display:flex;flex-direction:column;gap:14px;}
 .jcard label{font-size:10px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;}
-.jcard input{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:18px;outline:none;transition:.2s;text-align:center;letter-spacing:2px;width:100%;}
+.jcard input{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:20px;outline:none;transition:.2s;text-align:center;width:100%;}
 .jcard input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,197,66,.12);}
-.jcard input#roomin{text-transform:uppercase;letter-spacing:6px;font-size:22px;}
-.btn{font-family:'Outfit',sans-serif;font-weight:700;letter-spacing:.5px;padding:15px 20px;border-radius:14px;border:none;cursor:pointer;transition:.2s;font-size:17px;width:100%;}
-.btn-gold{background:linear-gradient(135deg,var(--gold),#e8a020);color:#1a1008;box-shadow:0 0 18px rgba(245,197,66,.35);}
-.btn-gold:active{transform:scale(.97);}
-.btn-ghost{background:transparent;border:1px solid #333355;color:var(--dim);}
+#roomin{text-transform:uppercase;letter-spacing:8px;font-size:24px;font-family:'Outfit',sans-serif;font-weight:900;}
+.btn-join{font-family:'Outfit',sans-serif;font-weight:900;font-size:18px;padding:16px;border-radius:14px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--gold),#e8a020);color:#1a1008;box-shadow:0 4px 16px rgba(245,197,66,.4);width:100%;touch-action:manipulation;}
+.btn-join:active{transform:scale(.97);}
 
 /* LOBBY */
 #player-lobby{background:radial-gradient(ellipse 120% 60% at 50% 0%,#150a30 0%,var(--bg) 70%);text-align:center;}
@@ -33,21 +31,20 @@ body{display:flex;flex-direction:column;}
 .mydot{width:44px;height:44px;border-radius:50%;}
 .myname{font-family:'Outfit',sans-serif;font-size:28px;font-weight:900;}
 .roombadge{background:var(--s2);border-radius:10px;padding:8px 16px;font-size:10px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;}
-.roombadge span{color:var(--gold);font-family:'Outfit',sans-serif;font-size:18px;letter-spacing:6px;font-weight:900;}
+.roombadge span{color:var(--gold);font-family:'Outfit',sans-serif;font-size:20px;letter-spacing:8px;font-weight:900;}
 .waiting{color:var(--dim);font-size:11px;letter-spacing:2px;text-transform:uppercase;}
 .pdot-anim{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 1.5s ease-in-out infinite;margin-right:6px;}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(1.4);}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.4)}}
 
 /* BT */
 #bt-screen{background:radial-gradient(ellipse 120% 50% at 50% 0%,#1a0010 0%,var(--bg) 70%);}
 .phase-lbl{font-size:10px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;}
 .bt-st{font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;text-align:center;}
-.buzz-big{width:190px;height:190px;border-radius:50%;font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;border:none;cursor:pointer;color:white;display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px rgba(255,45,107,.5);transition:.12s;background:linear-gradient(135deg,var(--pink),#aa1040);}
-.buzz-big:active{transform:scale(.91);}
+.buzz-big{width:180px;height:180px;border-radius:50%;font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;border:none;cursor:pointer;color:white;display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px rgba(255,45,107,.5);background:linear-gradient(135deg,var(--pink),#aa1040);touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 .buzz-big:disabled{opacity:.25;cursor:not-allowed;box-shadow:none;}
 .buzz-big.fired{animation:bfire .4s ease;}
 @keyframes bfire{0%{transform:scale(1)}40%{transform:scale(1.18)}70%{transform:scale(.94)}100%{transform:scale(1)}}
-.tdisp{font-family:'Outfit',sans-serif;font-size:54px;font-weight:900;color:var(--gold);}
+.tdisp{font-family:'Outfit',sans-serif;font-size:52px;font-weight:900;color:var(--gold);}
 .tbg{width:100%;height:5px;background:var(--s2);border-radius:3px;overflow:hidden;}
 .tfill{height:100%;background:linear-gradient(90deg,var(--green),var(--gold),var(--pink));border-radius:3px;transition:width 1s linear;}
 .revmini{background:var(--s2);border:1px solid var(--green);border-radius:11px;padding:12px 16px;width:100%;text-align:center;display:none;}
@@ -57,50 +54,21 @@ body{display:flex;flex-direction:column;}
 .revt{font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;color:var(--green);margin-top:4px;}
 
 /* QUIZ */
-#quiz-screen{background:radial-gradient(ellipse 120% 60% at 50% -10%,#0a0020 0%,#050508 70%);justify-content:flex-start;padding-top:12px;overflow-y:auto;/* Empêche le scroll pendant le jeu */overscroll-behavior:contain;}
+#quiz-screen{background:radial-gradient(ellipse 120% 60% at 50% -10%,#0a0020 0%,#050508 70%);justify-content:flex-start;padding-top:14px;overflow-y:auto;}
 .qmini{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:16px 14px;width:100%;text-align:center;}
 .qmcat{font-size:10px;letter-spacing:3px;color:#9999bb;text-transform:uppercase;margin-bottom:8px;font-family:'DM Mono',monospace;}
-.qmtxt{font-family:'Outfit',sans-serif;font-size:clamp(17px,5vw,24px);font-weight:900;line-height:1.35;color:white;word-break:break-word;}
+.qmtxt{font-family:'Outfit',sans-serif;font-size:clamp(17px,5vw,24px);font-weight:900;line-height:1.3;color:white;word-break:break-word;}
 .amob{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;}
-.abtn{
-  border:none;border-radius:18px;
-  padding:12px 8px;
-  cursor:pointer;
-  /* Touch optimisations */
-  touch-action:manipulation;
-  -webkit-touch-callout:none;
-  -webkit-user-select:none;
-  user-select:none;
-  /* Taille minimum pour doigts */
-  min-height:90px;
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Outfit',sans-serif;
-  font-size:clamp(14px,4vw,19px);
-  font-weight:800;color:white;
-  text-shadow:0 1px 3px rgba(0,0,0,.4);
-  box-shadow:0 5px 0 rgba(0,0,0,.3);
-  text-align:center;
-  /* Pas d'animation de délai pour réactivité */
-  animation:tileIn .3s ease both;
-  /* Éviter le flash au tap sur iOS */
-  -webkit-tap-highlight-color:transparent;
-}
-.abtn:nth-child(1){animation-delay:.03s;}
-.abtn:nth-child(2){animation-delay:.06s;}
-.abtn:nth-child(3){animation-delay:.09s;}
-.abtn:nth-child(4){animation-delay:.12s;}
-@keyframes tileIn{from{transform:scale(.75);opacity:0;}to{transform:scale(1);opacity:1;}}
-.abtn:active:not(:disabled){
-  transform:scale(.94);
-  box-shadow:0 2px 0 rgba(0,0,0,.3);
-  transition:transform .05s;
-}
+.abtn{border:none;border-radius:18px;padding:14px 10px;cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:88px;font-family:'Outfit',sans-serif;font-size:clamp(14px,4vw,18px);font-weight:800;color:white;text-shadow:0 1px 3px rgba(0,0,0,.4);box-shadow:0 5px 0 rgba(0,0,0,.3);text-align:center;animation:tileIn .3s cubic-bezier(.34,1.56,.64,1) both;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
+@keyframes tileIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.abtn:active:not(:disabled){transform:scale(.93);box-shadow:0 2px 0 rgba(0,0,0,.3);}
+.abtn.selected{box-shadow:0 0 0 4px white,0 0 20px rgba(255,255,255,.3)!important;transform:scale(1.03)!important;}
 .abtn.right{box-shadow:0 0 0 5px white,0 0 24px rgba(255,255,255,.4)!important;transform:scale(1.04)!important;}
-.abtn.wrong{opacity:.25;transform:scale(.97);}
+.abtn.wrong{opacity:.25;}
 .abtn:disabled{cursor:not-allowed;}
 
 /* SCORES */
-.scorewrap{width:100%;display:flex;flex-direction:column;gap:6px;margin-top:2px;}
+.scorewrap{width:100%;display:flex;flex-direction:column;gap:6px;margin-top:4px;}
 .smini{background:var(--s1);border:1px solid var(--border);border-radius:9px;padding:8px 12px;display:flex;align-items:center;gap:9px;}
 .sdot{width:7px;height:7px;border-radius:50%;}
 .sname{flex:1;font-size:13px;}
@@ -132,10 +100,10 @@ body{display:flex;flex-direction:column;}
   <div class="logo">AMUSOIR</div>
   <div class="jcard">
     <label>Ton prénom</label>
-    <input type="text" id="namein" placeholder="Marie" maxlength="14" autocomplete="off" autocorrect="off">
+    <input type="text" id="namein" placeholder="Marie" maxlength="14" autocomplete="off" autocorrect="off" autocapitalize="words">
     <label>Code de la salle</label>
-    <input type="text" id="roomin" placeholder="XXXX" maxlength="4" autocomplete="off" autocorrect="off">
-    <button class="btn btn-gold" onclick="joinRoom()">REJOINDRE →</button>
+    <input type="text" id="roomin" placeholder="XXXX" maxlength="6" autocomplete="off" autocorrect="off" autocapitalize="characters">
+    <button class="btn-join" id="join-btn">REJOINDRE →</button>
   </div>
 </div>
 
@@ -172,31 +140,46 @@ body{display:flex;flex-direction:column;}
   <div style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:900;">🏆 Résultats</div>
   <div class="myrank" id="myrank">—</div>
   <div class="srlist" id="srlist"></div>
-  <button class="btn btn-ghost" style="margin-top:10px;width:auto;padding:11px 22px;" onclick="go('join')">← Retour</button>
+  <button onclick="go('join')" style="margin-top:10px;background:transparent;border:1px solid #333355;color:var(--dim);font-family:'Outfit',sans-serif;padding:11px 22px;border-radius:12px;font-size:14px;cursor:pointer;">← Retour</button>
 </div>
 
 <script>
 const ABLY_KEY='U7BRyw.wc4MuQ:5b4cqlgpCcY0b0-Hhl3if0pG9LqsshyQh9ovTu7j9KQ';
-const COLORS=['#ff2d6b','#00e5ff','#00f5a0','#f5c542','#ff7b00','#c77dff','#ff9ef5','#4cc9f0','#f72585','#7209b7'];
+const COLORS=['#ff2d6b','#00e5ff','#00f5a0','#f5c542','#ff7b00','#c77dff','#ff9ef5','#4cc9f0'];
 let myId=Math.random().toString(36).substring(2,10);
 let myName='',myColor='',roomCode='',ablyChan=null;
 let btTime=30,btInterval=null,buzzDone=false;
 
-function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='bt-screen')initBuzzBtn();}
-
-// Lire le paramètre room depuis l'URL après chargement du DOM
-window.addEventListener('DOMContentLoaded', function() {
-  const urlRoom = new URLSearchParams(location.search).get('room');
-  if(urlRoom) {
-    document.getElementById('roomin').value = urlRoom.toUpperCase();
+// ── Lire ?room= dans l'URL APRÈS chargement complet ──
+window.addEventListener('load',function(){
+  const params=new URLSearchParams(window.location.search);
+  const urlRoom=params.get('room');
+  if(urlRoom){
+    document.getElementById('roomin').value=urlRoom.toUpperCase();
   }
+});
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── Bouton REJOINDRE avec touchstart pour réactivité iOS ──
+document.addEventListener('DOMContentLoaded',function(){
+  const btn=document.getElementById('join-btn');
+  btn.addEventListener('touchstart',function(e){e.preventDefault();joinRoom();},{passive:false});
+  btn.addEventListener('click',joinRoom);
+
+  const buzzbtn=document.getElementById('buzzbtn');
+  buzzbtn.addEventListener('touchstart',function(e){e.preventDefault();if(!buzzbtn.disabled)doBuzz();},{passive:false});
+  buzzbtn.addEventListener('click',function(){if(!buzzbtn.disabled)doBuzz();});
 });
 
 function joinRoom(){
   myName=document.getElementById('namein').value.trim();
   roomCode=document.getElementById('roomin').value.trim().toUpperCase();
   if(!myName){showToast('Entre ton prénom !');return;}
-  if(roomCode.length < 2){showToast('Code de salle invalide !');return;}
+  if(!roomCode){showToast('Entre le code de la salle !');return;}
   myColor=COLORS[Math.floor(Math.random()*COLORS.length)];
   document.getElementById('mydot').style.background=myColor;
   document.getElementById('mynamedisplay').textContent=myName;
@@ -215,23 +198,17 @@ function connectAbly(){
       ablyChan.subscribe('state',(msg)=>onState(msg.data));
       ablyChan.publish('join',{id:myId,name:myName,color:myColor});
     });
-    ably.connection.on('disconnected',()=>{
-      document.getElementById('sled').className='sled err';
-      document.getElementById('stxt').textContent='Reconnexion...';
-    });
-    ably.connection.on('failed',()=>{
-      document.getElementById('sled').className='sled err';
-      document.getElementById('stxt').textContent='Erreur réseau';
-    });
+    ably.connection.on('disconnected',()=>{document.getElementById('sled').className='sled err';document.getElementById('stxt').textContent='Reconnexion...';});
+    ably.connection.on('failed',()=>{document.getElementById('sled').className='sled err';document.getElementById('stxt').textContent='Erreur réseau';});
   }catch(e){document.getElementById('stxt').textContent='Erreur: '+e.message;}
 }
 
 function onState(s){
   const p=s.phase||'';
   if(s.players)renderScores(s.players);
-  if(p==='bt-start'||p==='bt-wait'||p==='bt-playing'||p==='bt-paused'||p==='bt-buzzed'||p==='bt-correct'||p==='bt-wrong'||p==='bt-reveal'){
+  if(['bt-start','bt-wait','bt-playing','bt-paused','bt-buzzed','bt-correct','bt-wrong','bt-reveal'].includes(p)){
     go('bt-screen');handleBT(p,s);
-  }else if(p==='quiz-start'||p==='quiz-question'||p==='quiz-reveal'){
+  }else if(['quiz-start','quiz-question','quiz-reveal'].includes(p)){
     go('quiz-screen');handleQuiz(p,s);
   }else if(p==='scoreboard'){
     showScores(s.players);
@@ -243,8 +220,7 @@ function handleBT(p,s){
   const st=document.getElementById('bt-st');
   const rev=document.getElementById('revmini');
   if(p==='bt-start'||p==='bt-wait'){
-    initBuzzBtn();
-    buzzDone=false;btn.disabled=true;btn.style.opacity='1';
+    buzzDone=false;btn.disabled=true;
     btn.style.background='linear-gradient(135deg,var(--pink),#aa1040)';
     st.textContent='⏳ Prêt !';document.getElementById('tdisp').textContent='—';
     document.getElementById('tfill').style.width='100%';
@@ -262,7 +238,7 @@ function handleBT(p,s){
   }else if(p==='bt-correct'){
     st.textContent=s.buzzer===myId?'✅ Bravo +1 !':'✅ Bonne réponse !';
   }else if(p==='bt-wrong'){
-    if(s.buzzer===myId){st.textContent='❌ Raté !';}
+    if(s.buzzer===myId)st.textContent='❌ Raté !';
     else{btn.disabled=false;st.textContent='🎵 Continue !';buzzDone=false;}
   }else if(p==='bt-reveal'){
     clearInterval(btInterval);btn.disabled=true;
@@ -275,17 +251,13 @@ function handleBT(p,s){
 }
 
 function doBuzz(){
-  if(buzzDone||!ablyChan)return;buzzDone=true;
-  document.getElementById('buzzbtn').classList.add('fired');
-  setTimeout(()=>document.getElementById('buzzbtn').classList.remove('fired'),400);
-  if(ablyChan)ablyChan.publish('buzz',{id:myId,name:myName});
-  document.getElementById('buzzbtn').disabled=true;
-}
-
-function initBuzzBtn(){
+  if(buzzDone||!ablyChan)return;
+  buzzDone=true;
   const btn=document.getElementById('buzzbtn');
-  btn.addEventListener('touchstart',function(e){e.preventDefault();if(!btn.disabled)doBuzz();},{passive:false});
-  btn.addEventListener('click',function(){if(!btn.disabled)doBuzz();});
+  btn.classList.add('fired');
+  setTimeout(()=>btn.classList.remove('fired'),400);
+  ablyChan.publish('buzz',{id:myId,name:myName});
+  btn.disabled=true;
 }
 
 function handleQuiz(p,s){
@@ -296,10 +268,7 @@ function handleQuiz(p,s){
     document.getElementById('qmcat').textContent=s.cat||'';
     document.getElementById('qmtxt').textContent=s.q||'';
     const ans=s.answer;
-    // Mélanger les choix aléatoirement (sinon la bonne réponse est tjrs en 1er)
-    const choices=[...(s.choices||[])];
-    for(let i=choices.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[choices[i],choices[j]]=[choices[j],choices[i]];}
-    // Couleurs fixes par position (rouge, bleu, vert, jaune) — pas liées à la bonne réponse
+    // Couleurs fixes par position — mélange déjà fait côté master
     const colors=[
       'linear-gradient(135deg,#e63946,#c1121f)',
       'linear-gradient(135deg,#2196f3,#0d47a1)',
@@ -308,23 +277,21 @@ function handleQuiz(p,s){
     ];
     const container=document.getElementById('amob');
     container.innerHTML='';
-    choices.forEach((a,i)=>{
+    (s.choices||[]).forEach((a,i)=>{
       const btn=document.createElement('button');
       btn.className='abtn';
       btn.dataset.val=a;
       btn.textContent=a;
-      btn.style.background=colors[i];
+      btn.style.background=colors[i%4];
       btn.style.animationDelay=(i*0.06)+'s';
+      // touchstart pour réactivité immédiate iOS
       btn.addEventListener('touchstart',function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        if(!btn.disabled) ansQ(btn.dataset.val, ans, container);
+        e.preventDefault();e.stopPropagation();
+        if(!btn.disabled)ansQ(btn.dataset.val,ans,container);
       },{passive:false});
-      btn.addEventListener('click',function(e){
-        if(!btn.disabled) ansQ(btn.dataset.val, ans, container);
+      btn.addEventListener('click',function(){
+        if(!btn.disabled)ansQ(btn.dataset.val,ans,container);
       });
-      container.appendChild(btn);
-    });
       container.appendChild(btn);
     });
   }else if(p==='quiz-reveal'){
@@ -337,24 +304,19 @@ function handleQuiz(p,s){
   }
 }
 
-function ansQ(choice, answer, container){
+function ansQ(choice,answer,container){
   // Désactiver tous les boutons immédiatement
-  const btns = (container||document).querySelectorAll('.abtn');
-  btns.forEach(btn => { btn.disabled=true; });
-  // Mettre en avant uniquement le bouton choisi (pas de correction visible)
-  btns.forEach(btn => {
-    if(btn.dataset.val===choice){
-      btn.style.boxShadow='0 0 0 4px white, 0 0 20px rgba(255,255,255,.3)';
-      btn.style.transform='scale(1.04)';
-    } else {
-      btn.style.opacity='0.35';
-    }
+  container.querySelectorAll('.abtn').forEach(btn=>{
+    btn.disabled=true;
+    if(btn.dataset.val===choice)btn.classList.add('selected');
+    else btn.style.opacity='0.35';
   });
+  // Envoyer la réponse
   if(ablyChan)ablyChan.publish('answer',{id:myId,name:myName,answer:choice});
 }
 
 function renderScores(arr){
-  const html=arr.map(p=>'<div class="smini"><div class="sdot" style="background:'+p.color+'"></div><div class="sname">'+p.name+'</div><div class="spts" style="color:'+p.color+'">'+p.score+'</div></div>').join('');
+  const html=arr.map(p=>`<div class="smini"><div class="sdot" style="background:${p.color}"></div><div class="sname">${p.name}</div><div class="spts" style="color:${p.color}">${p.score}</div></div>`).join('');
   document.getElementById('btscores').innerHTML=html;
   document.getElementById('qscores').innerHTML=html;
 }
@@ -364,12 +326,11 @@ function showScores(arr){
   const sorted=[...arr].sort((a,b)=>b.score-a.score);
   const medals=['🥇','🥈','🥉'];
   const mi=sorted.findIndex(p=>p.id===myId);
-  document.getElementById('myrank').textContent=medals[mi]||(mi>=0?mi+1:'?');
-  document.getElementById('srlist').innerHTML=sorted.map((p,i)=>'<div class="srrow" style="'+(p.id===myId?'border-color:'+p.color:'')+'"><div class="srrank">'+(medals[i]||i+1)+'</div><div class="srname" style="color:'+p.color+'">'+p.name+'</div><div class="srpts" style="color:'+p.color+'">'+p.score+' pts</div></div>').join('');
+  document.getElementById('myrank').textContent=medals[mi]||(mi>=0?'#'+(mi+1):'?');
+  document.getElementById('srlist').innerHTML=sorted.map((p,i)=>`<div class="srrow" style="${p.id===myId?'border-color:'+p.color:''}"><div class="srrank">${medals[i]||i+1}</div><div class="srname" style="color:${p.color}">${p.name}</div><div class="srpts" style="color:${p.color}">${p.score} pts</div></div>`).join('');
   go('score-screen');
 }
 
-function esc(s){return s.replace(/'/g,"&#39;").replace(/"/g,"&quot;");}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 </script>
 </body>
