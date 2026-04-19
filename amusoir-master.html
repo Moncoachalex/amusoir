@@ -163,6 +163,28 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-
 @keyframes cff{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
 .spinner{width:18px;height:18px;border:2px solid var(--s2);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* BT NIVEAUX & SECRET */
+.diff-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.diff-pill{padding:7px 14px;border-radius:20px;border:2px solid var(--border);background:var(--s1);color:var(--dim);font-size:12px;cursor:pointer;transition:.2s;font-family:'DM Mono',monospace;}
+.diff-pill.on{color:white;}
+.diff-pill[data-d="1"].on{border-color:#00f5a0;background:rgba(0,245,160,.15);color:#00f5a0;}
+.diff-pill[data-d="2"].on{border-color:#f5c542;background:rgba(245,197,66,.15);color:#f5c542;}
+.diff-pill[data-d="3"].on{border-color:#ff7b00;background:rgba(255,123,0,.15);color:#ff7b00;}
+.diff-pill[data-d="4"].on{border-color:#ff2d6b;background:rgba(255,45,107,.15);color:#ff2d6b;}
+.secret-btn{position:absolute;top:10px;left:14px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--dim);cursor:pointer;z-index:50;}
+.secret-btn:hover{color:var(--text);}
+.secret-panel{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;backdrop-filter:blur(8px);}
+.secret-panel.open{display:flex;}
+.secret-row{display:flex;gap:10px;align-items:center;}
+.secret-label{font-size:10px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;min-width:60px;text-align:right;}
+.secret-val{font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:white;}
+.secret-val.empty{color:#444466;font-style:italic;font-size:16px;}
+.diff-badge{padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:2px;}
+.pts-grid{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px;}
+.pts-btn{padding:9px 16px;border-radius:10px;border:2px solid transparent;background:var(--s2);color:var(--dim);font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:.2s;}
+.pts-btn.active{color:white;border-color:currentColor;}
+.pts-btn:hover{background:rgba(255,255,255,.06);}
 </style>
 </head>
 <body>
@@ -218,6 +240,13 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-
       <button onclick="searchYT()">CHERCHER</button>
     </div>
     <div class="rdrop" id="rdrop"></div>
+    <p class="slbl">NIVEAU DE DIFFICULTÉ</p>
+    <div class="diff-row">
+      <div class="diff-pill on" data-d="1" onclick="setDiff(1,this)">🟢 Niv.1 — Artiste OU Titre</div>
+      <div class="diff-pill" data-d="2" onclick="setDiff(2,this)">🟡 Niv.2 — Artiste ET Titre</div>
+      <div class="diff-pill" data-d="3" onclick="setDiff(3,this)">🟠 Niv.3 — + Album</div>
+      <div class="diff-pill" data-d="4" onclick="setDiff(4,this)">🔴 Niv.4 — + Année</div>
+    </div>
     <p class="slbl">PLAYLIST (<span id="plcnt">0</span> morceaux)</p>
     <div class="plwrap" id="plwrap"></div>
     <div class="stepbtns" style="margin-top:6px;">
@@ -251,8 +280,22 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-
   </div>
 </div>
 
+<!-- SECRET PANEL (maître) -->
+<div class="secret-panel" id="secret-panel">
+  <div style="font-size:10px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;">🔒 RÉPONSE SECRÈTE</div>
+  <div id="secret-diff-badge" class="diff-badge"></div>
+  <div class="secret-row"><span class="secret-label">ARTISTE</span><span class="secret-val" id="sec-artist">—</span></div>
+  <div class="secret-row" id="sec-title-row"><span class="secret-label">TITRE</span><span class="secret-val" id="sec-title">—</span></div>
+  <div class="secret-row" id="sec-album-row" style="display:none"><span class="secret-label">ALBUM</span><span class="secret-val" id="sec-album">—</span></div>
+  <div class="secret-row" id="sec-year-row" style="display:none"><span class="secret-label">ANNÉE</span><span class="secret-val" id="sec-year">—</span></div>
+  <div style="margin-top:8px;font-size:11px;color:var(--dim);text-align:center;">Attribution des points</div>
+  <div class="pts-grid" id="pts-grid"></div>
+  <button class="btn btn-ghost" style="margin-top:6px" onclick="closeSecret()">← Fermer</button>
+</div>
+
 <!-- BT GAME -->
 <div class="screen" id="bt-game">
+  <button class="secret-btn" onclick="openSecret()">🔒 Réponse</button>
   <div class="gtop">
     <div><div class="rlbl">MANCHE</div><div class="rval"><span id="btr">1</span>/<span id="bttot">—</span></div></div>
     <div class="schips" id="btsc"></div>
@@ -261,11 +304,16 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-
   <div class="garea">
     <div class="mcard">
       <div class="mst" id="mst">PRÊT</div>
+      <div style="font-size:11px;color:var(--dim);margin-bottom:6px;" id="diff-display">—</div>
       <button class="pbtn" id="pbtn" onclick="togglePlay()">▶</button>
       <div class="tnum" id="tnum">30</div>
       <div class="tbg"><div class="tfill" id="tfill" style="width:100%"></div></div>
     </div>
-    <div class="revc" id="revc"><div class="reva" id="reva">—</div><div class="revt" id="revt">—</div></div>
+    <div class="revc" id="revc">
+      <div class="reva" id="reva">—</div>
+      <div class="revt" id="revt">—</div>
+      <div id="rev-extra" style="margin-top:6px;font-size:12px;color:var(--dim);"></div>
+    </div>
     <div class="bgrid" id="bgrid"></div>
     <div class="nrow" id="btnext" style="display:none"><button class="btn btn-pink" onclick="nextBT()">MANCHE SUIVANTE →</button></div>
   </div>
@@ -308,7 +356,7 @@ const COLORS = ['#ff2d6b','#00e5ff','#00f5a0','#f5c542','#ff7b00','#c77dff','#ff
 const MEM_KEY = 'amusoir_seen_v2';
 const MEM_DAYS = 30;
 
-let roomCode='', players={}, playlist=[];
+let roomCode='', players={}, playlist=[], btDifficulty=1;
 let btRound=0, btPlaying=false, btTimer=null, btTime=30, buzzed=null;
 let quizQs=[], quizIdx=0, quizCount=10, quizTimer=null, quizTime=20, quizDone=false;
 let quizAnswers={}, quizStartTime=0, autoNextTimer=null;
@@ -666,15 +714,36 @@ async function searchYT(){
 function esc(s){return s.replace(/'/g,"&#39;").replace(/"/g,"&quot;");}
 function addSong(id,title,ch,thumb){
   if(playlist.find(p=>p.id===id)){showToast('Déjà dans la playlist !');return;}
-  playlist.push({id,title,ch,thumb});
+  // Extraire artiste et titre depuis le titre YouTube (ex: "Artist - Title")
+  let artist=ch, songTitle=title;
+  const dash=title.match(/^(.+?)\s*[-–—]\s*(.+)$/);
+  if(dash){artist=dash[1].trim();songTitle=dash[2].trim();}
+  playlist.push({id,title,ch,thumb,artist,songTitle,album:'',year:''});
   document.getElementById('rdrop').classList.remove('open');
   document.getElementById('yts').value='';
   renderPL();
 }
 function removeSong(i){playlist.splice(i,1);renderPL();}
+function updateSongField(i,field,val){if(playlist[i])playlist[i][field]=val;}
 function renderPL(){
   document.getElementById('plcnt').textContent=playlist.length;
-  document.getElementById('plwrap').innerHTML=playlist.map((p,i)=>`<div class="plitem"><img src="${p.thumb}"><div class="pli-inf"><div class="pli-t">${p.title.substring(0,46)}</div><div class="pli-c">${p.ch}</div></div><button class="plrm" onclick="removeSong(${i})">✕</button></div>`).join('');
+  document.getElementById('plwrap').innerHTML=playlist.map((p,i)=>`
+    <div class="plitem" style="flex-direction:column;align-items:flex-start;gap:6px;">
+      <div style="display:flex;align-items:center;gap:10px;width:100%">
+        <img src="${p.thumb}">
+        <div style="flex:1">
+          <div class="pli-t">${p.title.substring(0,44)}</div>
+          <div class="pli-c">${p.ch}</div>
+        </div>
+        <button class="plrm" onclick="removeSong(${i})">✕</button>
+      </div>
+      <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap;">
+        <input placeholder="🎤 Artiste" value="${esc(p.artist||'')}" oninput="updateSongField(${i},'artist',this.value)" style="flex:1;min-width:100px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px;font-family:'DM Mono',monospace;outline:none;">
+        <input placeholder="🎵 Titre" value="${esc(p.songTitle||'')}" oninput="updateSongField(${i},'songTitle',this.value)" style="flex:1;min-width:100px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px;font-family:'DM Mono',monospace;outline:none;">
+        <input placeholder="💿 Album" value="${esc(p.album||'')}" oninput="updateSongField(${i},'album',this.value)" style="flex:1;min-width:80px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px;font-family:'DM Mono',monospace;outline:none;">
+        <input placeholder="📅 Année" value="${esc(p.year||'')}" oninput="updateSongField(${i},'year',this.value)" style="width:72px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px;font-family:'DM Mono',monospace;outline:none;">
+      </div>
+    </div>`).join('');
 }
 
 // ══════════════════════════════════════
@@ -689,14 +758,24 @@ function startBT(){
   broadcast('state',{phase:'bt-start',players:getPlayers()});
   loadBTRound();
 }
+function setDiff(n,el){
+  btDifficulty=n;
+  document.querySelectorAll('.diff-pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+}
+
 function loadBTRound(){
   buzzed=null;btPlaying=false;clearInterval(btTimer);btTime=30;
   document.getElementById('btr').textContent=btRound+1;
   document.getElementById('pbtn').innerHTML='▶';document.getElementById('pbtn').classList.remove('on');
   document.getElementById('tnum').textContent='30';document.getElementById('tfill').style.width='100%';
   document.getElementById('revc').classList.remove('show');document.getElementById('btnext').style.display='none';
+  const diffLabels={1:'🟢 Artiste OU Titre — 1pt',2:'🟡 Artiste + Titre — 2pts',3:'🟠 + Album — 3pts',4:'🔴 + Année — 4pts'};
+  document.getElementById('diff-display').textContent=diffLabels[btDifficulty]||'';
+  // Préparer le panneau secret
+  updateSecretPanel();
   renderBGrid();
-  broadcast('state',{phase:'bt-wait',round:btRound});
+  broadcast('state',{phase:'bt-wait',round:btRound,difficulty:btDifficulty});
   if(ytPlayer&&ytReady){try{ytPlayer.stopVideo();}catch(e){}}
 }
 function togglePlay(){
@@ -716,10 +795,10 @@ function togglePlay(){
 function award(ok){
   document.getElementById('pt-modal').classList.remove('open');
   if(ok){
-    players[buzzed].score++;renderChips('btsc');renderBGrid();
-    showToast('✓ +1 pour '+players[buzzed].name+' !');
-    broadcast('state',{phase:'bt-correct',buzzer:buzzed,players:getPlayers()});
-    setTimeout(()=>revealBT(),500);
+    // Ouvrir le panneau secret pour attribuer les points précis
+    updateSecretPanel();
+    openSecret();
+    setTimeout(()=>revealBT(),300);
   }else{
     const g=document.getElementById('bgrid');
     const btn=[...g.querySelectorAll('.bcard')].find(b=>b.dataset.id===buzzed);
@@ -728,14 +807,62 @@ function award(ok){
     buzzed=null;togglePlay();
   }
 }
+
+function updateSecretPanel(){
+  const s=playlist[btRound]||{};
+  const diffColors={1:'#00f5a0',2:'#f5c542',3:'#ff7b00',4:'#ff2d6b'};
+  const diffNames={1:'NIV.1 — Artiste OU Titre',2:'NIV.2 — Artiste + Titre',3:'NIV.3 — + Album',4:'NIV.4 — + Année'};
+  const badge=document.getElementById('secret-diff-badge');
+  badge.textContent=diffNames[btDifficulty]||'';
+  badge.style.background=diffColors[btDifficulty]+'22';
+  badge.style.color=diffColors[btDifficulty]||'white';
+  badge.style.border='1px solid '+(diffColors[btDifficulty]||'white');
+  document.getElementById('sec-artist').textContent=s.artist||s.ch||'—';
+  document.getElementById('sec-title').textContent=s.songTitle||s.title||'—';
+  const albumRow=document.getElementById('sec-album-row');
+  const yearRow=document.getElementById('sec-year-row');
+  albumRow.style.display=btDifficulty>=3?'flex':'none';
+  yearRow.style.display=btDifficulty>=4?'flex':'none';
+  if(btDifficulty>=3)document.getElementById('sec-album').textContent=s.album||'(non renseigné)';
+  if(btDifficulty>=4)document.getElementById('sec-year').textContent=s.year||'(non renseignée)';
+  // Boutons d'attribution de points
+  const ptsGrid=document.getElementById('pts-grid');
+  const maxPts=btDifficulty;
+  ptsGrid.innerHTML=Object.values(players).map(p=>`
+    <div style="background:var(--s1);border:1px solid ${p.color}22;border-radius:12px;padding:10px 14px;text-align:center;min-width:110px;">
+      <div style="font-family:'Outfit',sans-serif;font-weight:700;color:${p.color};margin-bottom:8px;">${p.name}</div>
+      <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">
+        ${Array.from({length:maxPts+1},(_,pts)=>`<button class="pts-btn" onclick="awardPoints('${p.id}',${pts})" style="color:${pts===0?'#666688':p.color};border-color:${pts===0?'transparent':p.color+'44'}">${pts===0?'0':'+'+pts}</button>`).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--dim);margin-top:6px;">Total: <span id="pts-total-${p.id}" style="color:${p.color};font-weight:700">${p.score}</span></div>
+    </div>`).join('');
+}
+
+function awardPoints(pid,pts){
+  if(!players[pid])return;
+  players[pid].score+=pts;
+  renderChips('btsc');renderBGrid();
+  document.getElementById('pts-total-'+pid).textContent=players[pid].score;
+  broadcast('state',{phase:'bt-correct',buzzer:pid,players:getPlayers()});
+  showToast(pts>0?`+${pts} pour ${players[pid].name} !`:`0 pour ${players[pid].name}`);
+}
+
+function openSecret(){document.getElementById('secret-panel').classList.add('open');}
+function closeSecret(){document.getElementById('secret-panel').classList.remove('open');}
+
 function revealBT(){
   const s=playlist[btRound];
-  document.getElementById('reva').textContent=s.ch;document.getElementById('revt').textContent=s.title;
+  document.getElementById('reva').textContent=s.artist||s.ch;
+  document.getElementById('revt').textContent=s.songTitle||s.title;
+  let extra='';
+  if(btDifficulty>=3&&s.album)extra+=`💿 ${s.album}`;
+  if(btDifficulty>=4&&s.year)extra+=(extra?' — ':'')+`📅 ${s.year}`;
+  document.getElementById('rev-extra').textContent=extra;
   document.getElementById('revc').classList.add('show');document.getElementById('mst').textContent='RÉPONSE !';
   document.getElementById('btnext').style.display='flex';
   if(ytPlayer&&ytReady){try{ytPlayer.stopVideo();}catch(e){}}
   btPlaying=false;clearInterval(btTimer);
-  broadcast('state',{phase:'bt-reveal',artist:s.ch,title:s.title});
+  broadcast('state',{phase:'bt-reveal',artist:s.artist||s.ch,title:s.songTitle||s.title,album:btDifficulty>=3?s.album:'',year:btDifficulty>=4?s.year:'',difficulty:btDifficulty});
 }
 function nextBT(){btRound++;if(btRound>=playlist.length){endGame();return;}loadBTRound();}
 function renderBGrid(){

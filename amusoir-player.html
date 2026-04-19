@@ -242,9 +242,17 @@ function handleBT(p,s){
     else{btn.disabled=false;st.textContent='🎵 Continue !';buzzDone=false;}
   }else if(p==='bt-reveal'){
     clearInterval(btInterval);btn.disabled=true;
-    st.textContent='🎯 La réponse :';
+    const diffNames={1:'🟢 Artiste OU Titre',2:'🟡 Artiste + Titre',3:'🟠 + Album',4:'🔴 + Année'};
+    st.textContent='🎯 '+(diffNames[s.difficulty]||'La réponse');
     document.getElementById('revma').textContent=s.artist||'';
     document.getElementById('revmt').textContent=s.title||'';
+    // Album et année
+    let extra='';
+    if(s.album)extra+='💿 '+s.album;
+    if(s.year)extra+=(extra?' — ':'')+' 📅 '+s.year;
+    let extraEl=document.getElementById('revmextra');
+    if(!extraEl){extraEl=document.createElement('div');extraEl.id='revmextra';extraEl.style.cssText='font-size:12px;color:var(--dim);margin-top:4px;';document.getElementById('revmini').appendChild(extraEl);}
+    extraEl.textContent=extra;
     rev.classList.add('show');
     btn.style.background='linear-gradient(135deg,var(--pink),#aa1040)';buzzDone=false;
   }
