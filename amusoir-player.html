@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>AMUSOIR — Joueur</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="ably.min-1.js"></script>
@@ -57,20 +57,46 @@ body{display:flex;flex-direction:column;}
 .revt{font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;color:var(--green);margin-top:4px;}
 
 /* QUIZ */
-#quiz-screen{background:radial-gradient(ellipse 120% 60% at 50% -10%,#0a0020 0%,#050508 70%);justify-content:flex-start;padding-top:16px;overflow-y:auto;}
+#quiz-screen{background:radial-gradient(ellipse 120% 60% at 50% -10%,#0a0020 0%,#050508 70%);justify-content:flex-start;padding-top:12px;overflow-y:auto;/* Empêche le scroll pendant le jeu */overscroll-behavior:contain;}
 .qmini{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:16px 14px;width:100%;text-align:center;}
-.qmcat{font-size:10px;letter-spacing:3px;color:#9999bb;text-transform:uppercase;margin-bottom:7px;font-family:'DM Mono',monospace;}
-.qmtxt{font-family:'Outfit',sans-serif;font-size:clamp(16px,4.5vw,22px);font-weight:900;line-height:1.3;color:white;}
-.amob{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;}
-.abtn{border:none;border-radius:16px;padding:0 10px;cursor:pointer;transition:.1s;display:flex;align-items:center;justify-content:center;min-height:80px;font-family:'Outfit',sans-serif;font-size:clamp(13px,3.8vw,17px);font-weight:800;color:white;text-shadow:0 1px 3px rgba(0,0,0,.4);box-shadow:0 5px 0 rgba(0,0,0,.3);text-align:center;animation:tileIn .35s cubic-bezier(.34,1.56,.64,1) both;}
-.abtn:nth-child(1){background:linear-gradient(135deg,#e63946,#c1121f);animation-delay:.04s;}
-.abtn:nth-child(2){background:linear-gradient(135deg,#2196f3,#0d47a1);animation-delay:.08s;}
-.abtn:nth-child(3){background:linear-gradient(135deg,#43a047,#1b5e20);animation-delay:.12s;}
-.abtn:nth-child(4){background:linear-gradient(135deg,#ffc107,#e65100);animation-delay:.16s;}
-@keyframes tileIn{from{transform:scale(.7);opacity:0;}to{transform:scale(1);opacity:1;}}
-.abtn:active:not(:disabled){transform:scale(.91) translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.3);}
-.abtn.right{box-shadow:0 0 0 4px white,0 0 22px rgba(255,255,255,.35)!important;transform:scale(1.03)!important;}
-.abtn.wrong{opacity:.25;}
+.qmcat{font-size:10px;letter-spacing:3px;color:#9999bb;text-transform:uppercase;margin-bottom:8px;font-family:'DM Mono',monospace;}
+.qmtxt{font-family:'Outfit',sans-serif;font-size:clamp(17px,5vw,24px);font-weight:900;line-height:1.35;color:white;word-break:break-word;}
+.amob{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;}
+.abtn{
+  border:none;border-radius:18px;
+  padding:12px 8px;
+  cursor:pointer;
+  /* Touch optimisations */
+  touch-action:manipulation;
+  -webkit-touch-callout:none;
+  -webkit-user-select:none;
+  user-select:none;
+  /* Taille minimum pour doigts */
+  min-height:90px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Outfit',sans-serif;
+  font-size:clamp(14px,4vw,19px);
+  font-weight:800;color:white;
+  text-shadow:0 1px 3px rgba(0,0,0,.4);
+  box-shadow:0 5px 0 rgba(0,0,0,.3);
+  text-align:center;
+  /* Pas d'animation de délai pour réactivité */
+  animation:tileIn .3s ease both;
+  /* Éviter le flash au tap sur iOS */
+  -webkit-tap-highlight-color:transparent;
+}
+.abtn:nth-child(1){background:linear-gradient(135deg,#e63946,#c1121f);animation-delay:.03s;}
+.abtn:nth-child(2){background:linear-gradient(135deg,#2196f3,#0d47a1);animation-delay:.06s;}
+.abtn:nth-child(3){background:linear-gradient(135deg,#43a047,#1b5e20);animation-delay:.09s;}
+.abtn:nth-child(4){background:linear-gradient(135deg,#ffc107,#e65100);animation-delay:.12s;}
+@keyframes tileIn{from{transform:scale(.75);opacity:0;}to{transform:scale(1);opacity:1;}}
+.abtn:active:not(:disabled){
+  transform:scale(.94);
+  box-shadow:0 2px 0 rgba(0,0,0,.3);
+  transition:transform .05s;
+}
+.abtn.right{box-shadow:0 0 0 5px white,0 0 24px rgba(255,255,255,.4)!important;transform:scale(1.04)!important;}
+.abtn.wrong{opacity:.25;transform:scale(.97);}
 .abtn:disabled{cursor:not-allowed;}
 
 /* SCORES */
@@ -129,7 +155,7 @@ body{display:flex;flex-direction:column;}
   <div class="bt-st" id="bt-st">⏳ Prêt !</div>
   <div class="tdisp" id="tdisp">—</div>
   <div class="tbg" style="width:100%"><div class="tfill" id="tfill" style="width:100%"></div></div>
-  <button class="buzz-big" id="buzzbtn" onclick="doBuzz()" disabled>BUZZ !</button>
+  <button class="buzz-big" id="buzzbtn" disabled>BUZZ !</button>
   <div class="revmini" id="revmini"><div class="reva" id="revma">—</div><div class="revt" id="revmt">—</div></div>
   <div class="scorewrap" id="btscores"></div>
 </div>
@@ -159,7 +185,7 @@ let btTime=30,btInterval=null,buzzDone=false;
 const urlRoom=new URLSearchParams(location.search).get('room');
 if(urlRoom)document.getElementById('roomin').value=urlRoom.toUpperCase();
 
-function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='bt-screen')initBuzzBtn();}
 
 function joinRoom(){
   myName=document.getElementById('namein').value.trim();
@@ -212,6 +238,7 @@ function handleBT(p,s){
   const st=document.getElementById('bt-st');
   const rev=document.getElementById('revmini');
   if(p==='bt-start'||p==='bt-wait'){
+    initBuzzBtn();
     buzzDone=false;btn.disabled=true;btn.style.opacity='1';
     btn.style.background='linear-gradient(135deg,var(--pink),#aa1040)';
     st.textContent='⏳ Prêt !';document.getElementById('tdisp').textContent='—';
@@ -250,6 +277,12 @@ function doBuzz(){
   document.getElementById('buzzbtn').disabled=true;
 }
 
+function initBuzzBtn(){
+  const btn=document.getElementById('buzzbtn');
+  btn.addEventListener('touchstart',function(e){e.preventDefault();if(!btn.disabled)doBuzz();},{passive:false});
+  btn.addEventListener('click',function(){if(!btn.disabled)doBuzz();});
+}
+
 function handleQuiz(p,s){
   if(p==='quiz-start'){
     document.getElementById('qmtxt').textContent='En attente de la première question...';
@@ -257,7 +290,12 @@ function handleQuiz(p,s){
   }else if(p==='quiz-question'){
     document.getElementById('qmcat').textContent=s.cat||'';
     document.getElementById('qmtxt').textContent=s.q||'';
-    document.getElementById('amob').innerHTML=(s.choices||[]).map((a)=>'<button class="abtn" data-val="'+esc(a)+'" onclick="ansQ(\''+esc(a)+'\',\''+esc(s.answer)+'\')">'+a+'</button>').join('');
+    const ans=s.answer;
+    document.getElementById('amob').innerHTML=(s.choices||[]).map((a)=>'<button class="abtn" data-val="'+esc(a)+'">'+a+'</button>').join('');
+    document.querySelectorAll('.abtn').forEach(btn=>{
+      btn.addEventListener('touchstart',function(e){e.preventDefault();if(!btn.disabled)ansQ(btn.dataset.val,ans);},{passive:false});
+      btn.addEventListener('click',function(){if(!btn.disabled)ansQ(btn.dataset.val,ans);});
+    });
   }else if(p==='quiz-reveal'){
     document.querySelectorAll('.abtn').forEach(btn=>{
       if(btn.dataset.val===s.answer)btn.classList.add('right');
