@@ -85,10 +85,10 @@ body{display:flex;flex-direction:column;}
   /* Éviter le flash au tap sur iOS */
   -webkit-tap-highlight-color:transparent;
 }
-.abtn:nth-child(1){background:linear-gradient(135deg,#e63946,#c1121f);animation-delay:.03s;}
-.abtn:nth-child(2){background:linear-gradient(135deg,#2196f3,#0d47a1);animation-delay:.06s;}
-.abtn:nth-child(3){background:linear-gradient(135deg,#43a047,#1b5e20);animation-delay:.09s;}
-.abtn:nth-child(4){background:linear-gradient(135deg,#ffc107,#e65100);animation-delay:.12s;}
+.abtn:nth-child(1){animation-delay:.03s;}
+.abtn:nth-child(2){animation-delay:.06s;}
+.abtn:nth-child(3){animation-delay:.09s;}
+.abtn:nth-child(4){animation-delay:.12s;}
 @keyframes tileIn{from{transform:scale(.75);opacity:0;}to{transform:scale(1);opacity:1;}}
 .abtn:active:not(:disabled){
   transform:scale(.94);
@@ -291,10 +291,34 @@ function handleQuiz(p,s){
     document.getElementById('qmcat').textContent=s.cat||'';
     document.getElementById('qmtxt').textContent=s.q||'';
     const ans=s.answer;
-    document.getElementById('amob').innerHTML=(s.choices||[]).map((a)=>'<button class="abtn" data-val="'+esc(a)+'">'+a+'</button>').join('');
-    document.querySelectorAll('.abtn').forEach(btn=>{
-      btn.addEventListener('touchstart',function(e){e.preventDefault();if(!btn.disabled)ansQ(btn.dataset.val,ans);},{passive:false});
-      btn.addEventListener('click',function(){if(!btn.disabled)ansQ(btn.dataset.val,ans);});
+    // Couleurs mélangées aléatoirement à chaque question
+    const colors=[
+      'linear-gradient(135deg,#e63946,#c1121f)',
+      'linear-gradient(135deg,#2196f3,#0d47a1)',
+      'linear-gradient(135deg,#43a047,#1b5e20)',
+      'linear-gradient(135deg,#ffc107,#e65100)'
+    ];
+    // Mélanger les couleurs
+    for(let i=colors.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[colors[i],colors[j]]=[colors[j],colors[i]];}
+    const container=document.getElementById('amob');
+    container.innerHTML='';
+    (s.choices||[]).forEach((a,i)=>{
+      const btn=document.createElement('button');
+      btn.className='abtn';
+      btn.dataset.val=a;
+      btn.textContent=a;
+      btn.style.background=colors[i];
+      btn.style.animationDelay=(i*0.06)+'s';
+      // Touchstart pour réactivité immédiate
+      btn.addEventListener('touchstart',function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if(!btn.disabled) ansQ(btn.dataset.val, ans, container);
+      },{passive:false});
+      btn.addEventListener('click',function(e){
+        if(!btn.disabled) ansQ(btn.dataset.val, ans, container);
+      });
+      container.appendChild(btn);
     });
   }else if(p==='quiz-reveal'){
     document.querySelectorAll('.abtn').forEach(btn=>{
@@ -306,11 +330,18 @@ function handleQuiz(p,s){
   }
 }
 
-function ansQ(choice,answer){
-  document.querySelectorAll('.abtn').forEach(btn=>{
-    btn.disabled=true;
-    if(btn.dataset.val===choice) btn.style.opacity='1';
-    else btn.classList.add('wrong');
+function ansQ(choice, answer, container){
+  // Désactiver tous les boutons immédiatement
+  const btns = (container||document).querySelectorAll('.abtn');
+  btns.forEach(btn => { btn.disabled=true; });
+  // Mettre en avant uniquement le bouton choisi (pas de correction visible)
+  btns.forEach(btn => {
+    if(btn.dataset.val===choice){
+      btn.style.boxShadow='0 0 0 4px white, 0 0 20px rgba(255,255,255,.3)';
+      btn.style.transform='scale(1.04)';
+    } else {
+      btn.style.opacity='0.35';
+    }
   });
   if(ablyChan)ablyChan.publish('answer',{id:myId,name:myName,answer:choice});
 }
