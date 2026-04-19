@@ -291,25 +291,25 @@ function handleQuiz(p,s){
     document.getElementById('qmcat').textContent=s.cat||'';
     document.getElementById('qmtxt').textContent=s.q||'';
     const ans=s.answer;
-    // Couleurs mélangées aléatoirement à chaque question
+    // Mélanger les choix aléatoirement (sinon la bonne réponse est tjrs en 1er)
+    const choices=[...(s.choices||[])];
+    for(let i=choices.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[choices[i],choices[j]]=[choices[j],choices[i]];}
+    // Couleurs fixes par position (rouge, bleu, vert, jaune) — pas liées à la bonne réponse
     const colors=[
       'linear-gradient(135deg,#e63946,#c1121f)',
       'linear-gradient(135deg,#2196f3,#0d47a1)',
       'linear-gradient(135deg,#43a047,#1b5e20)',
       'linear-gradient(135deg,#ffc107,#e65100)'
     ];
-    // Mélanger les couleurs
-    for(let i=colors.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[colors[i],colors[j]]=[colors[j],colors[i]];}
     const container=document.getElementById('amob');
     container.innerHTML='';
-    (s.choices||[]).forEach((a,i)=>{
+    choices.forEach((a,i)=>{
       const btn=document.createElement('button');
       btn.className='abtn';
       btn.dataset.val=a;
       btn.textContent=a;
       btn.style.background=colors[i];
       btn.style.animationDelay=(i*0.06)+'s';
-      // Touchstart pour réactivité immédiate
       btn.addEventListener('touchstart',function(e){
         e.preventDefault();
         e.stopPropagation();
@@ -318,6 +318,8 @@ function handleQuiz(p,s){
       btn.addEventListener('click',function(e){
         if(!btn.disabled) ansQ(btn.dataset.val, ans, container);
       });
+      container.appendChild(btn);
+    });
       container.appendChild(btn);
     });
   }else if(p==='quiz-reveal'){

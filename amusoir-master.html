@@ -1003,7 +1003,9 @@ function loadQ(){
   document.getElementById('qtfill').style.width='100%';
   document.getElementById('auto-bar').style.display='none';
   document.getElementById('agrid').innerHTML=q.c.map(a=>`<button class="abtn" onclick="selectAns()">${a}</button>`).join('');
-  broadcast('state',{phase:'quiz-question',idx:quizIdx,q:q.q,cat:q.cat,choices:q.c,answer:q.a});
+  // Mélanger les choix avant de broadcaster (sinon bonne réponse toujours en 1er)
+  const shuffledChoices = shuffleCopy(q.c);
+  broadcast('state',{phase:'quiz-question',idx:quizIdx,q:q.q,cat:q.cat,choices:shuffledChoices,answer:q.a});
   quizTimer=setInterval(()=>{
     quizTime--;
     if(!quizDone){
