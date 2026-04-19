@@ -182,16 +182,21 @@ let myId=Math.random().toString(36).substring(2,10);
 let myName='',myColor='',roomCode='',ablyChan=null;
 let btTime=30,btInterval=null,buzzDone=false;
 
-const urlRoom=new URLSearchParams(location.search).get('room');
-if(urlRoom)document.getElementById('roomin').value=urlRoom.toUpperCase();
-
 function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='bt-screen')initBuzzBtn();}
+
+// Lire le paramètre room depuis l'URL après chargement du DOM
+window.addEventListener('DOMContentLoaded', function() {
+  const urlRoom = new URLSearchParams(location.search).get('room');
+  if(urlRoom) {
+    document.getElementById('roomin').value = urlRoom.toUpperCase();
+  }
+});
 
 function joinRoom(){
   myName=document.getElementById('namein').value.trim();
   roomCode=document.getElementById('roomin').value.trim().toUpperCase();
   if(!myName){showToast('Entre ton prénom !');return;}
-  if(roomCode.length!==4){showToast('Code à 4 lettres !');return;}
+  if(roomCode.length < 2){showToast('Code de salle invalide !');return;}
   myColor=COLORS[Math.floor(Math.random()*COLORS.length)];
   document.getElementById('mydot').style.background=myColor;
   document.getElementById('mynamedisplay').textContent=myName;
