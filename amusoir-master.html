@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AMUSOIR — Écran Maître</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 <script src="ably.min-1.js"></script>
 <style>
 :root{
@@ -325,36 +326,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-
 // Utilise l'API de partage ou affiche le lien + un canvas simple
 function makeQR(url, container) {
   container.innerHTML = '';
-  // Essaie l'API native QR si disponible
   try {
-    // On crée un canvas avec le lien encodé visuellement
-    const size = 160;
-    const canvas = document.createElement('canvas');
-    canvas.width = size; canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, size, size);
-    // Utilise TextEncoder pour créer un QR simplifié
-    // Fallback: afficher le lien sous forme lisible + bouton copier
-    const inner = document.createElement('div');
-    inner.style.cssText = 'width:160px;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;gap:8px;';
-    const txt = document.createElement('p');
-    txt.style.cssText = 'font-size:8px;color:#000;word-break:break-all;text-align:center;line-height:1.4;';
-    txt.textContent = url;
-    const copyBtn = document.createElement('button');
-    copyBtn.style.cssText = 'background:#000;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:10px;cursor:pointer;';
-    copyBtn.textContent = '📋 Copier le lien';
-    copyBtn.onclick = () => { navigator.clipboard.writeText(url).then(()=>{copyBtn.textContent='✅ Copié !';setTimeout(()=>copyBtn.textContent='📋 Copier le lien',2000);}); };
-    inner.appendChild(txt);
-    inner.appendChild(copyBtn);
-    container.appendChild(inner);
+    const qr = qrcode(0, 'M');
+    qr.addData(url);
+    qr.make();
+    const img = document.createElement('img');
+    img.src = qr.createDataURL(4, 0);
+    img.style.cssText = 'display:block;border-radius:6px;width:160px;height:160px;';
+    container.appendChild(img);
   } catch(e) {
-    container.innerHTML = '<p style="font-size:9px;color:#000;padding:8px;">'+url+'</p>';
+    // Fallback: texte + bouton copier
+    container.innerHTML = '<div style="padding:10px;font-size:9px;color:#000;word-break:break-all;text-align:center;width:160px;">' + url + '</div>';
   }
-  // Essayer de charger un QR via image en arrière-plan
-  const img = new Image();
-  img.onload = () => { container.innerHTML = ''; img.style.cssText='display:block;border-radius:6px;width:160px;height:160px;'; container.appendChild(img); };
-  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(url);
 }
 
 // ════════════════════════════════════════════════════
