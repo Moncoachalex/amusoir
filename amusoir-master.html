@@ -737,7 +737,9 @@ async function fetchOTDB(categoryOtdb, amount) {
 // INIT
 // ════════════════════════════════════════════════════
 function init() {
-  roomCode = Math.random().toString(36).substring(2,6).toUpperCase();
+  // Générer un code salle toujours exactement 4 caractères
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  roomCode = Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
   document.getElementById('rc').textContent = roomCode;
   const playerUrl = location.origin + location.pathname.replace('amusoir-master','amusoir-player') + '?room=' + roomCode;
   document.getElementById('rurl').textContent = playerUrl;
