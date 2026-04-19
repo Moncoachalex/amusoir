@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMUSOIR — Écran Maître</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="ably.min.js"></script>
+<style>
+:root{
+  --bg:#07070f;--s1:#0f0f1c;--s2:#16162a;
+  --gold:#f5c542;--gold2:#e8a020;
+  --cyan:#00e5ff;--pink:#ff2d6b;--green:#00f5a0;
+  --text:#f0f0ff;--dim:#666688;--border:rgba(255,255,255,0.07);
+  --r:#e63946;--b:#2196f3;--g:#43a047;--y:#ffc107;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;overflow:hidden;}
+.screen{display:none;width:100vw;height:100vh;flex-direction:column;}
+.screen.active{display:flex;}
+
+/* ── LOBBY ── */
+#lobby{background:radial-gradient(ellipse 80% 60% at 50% -10%,#150a30 0%,var(--bg) 70%);align-items:center;justify-content:center;gap:24px;}
+.logo{font-family:'Outfit',sans-serif;font-size:clamp(56px,8vw,110px);font-weight:900;letter-spacing:-3px;background:linear-gradient(135deg,var(--gold) 0%,var(--pink) 50%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 40px rgba(245,197,66,.3));line-height:1;}
+.logo-sub{font-size:11px;letter-spacing:7px;color:var(--dim);text-transform:uppercase;text-align:center;margin-top:4px;}
+.lobby-grid{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;justify-content:center;}
+.panel{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:22px;}
+.panel h3{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--dim);margin-bottom:12px;}
+#qr-box{background:white;padding:8px;border-radius:10px;display:inline-block;min-width:160px;min-height:160px;display:flex;align-items:center;justify-content:center;}
+.room-code{font-family:'Outfit',sans-serif;font-size:44px;font-weight:900;color:var(--gold);letter-spacing:8px;text-align:center;margin-top:8px;}
+.plist{display:flex;flex-direction:column;gap:7px;min-height:80px;min-width:240px;}
+.pentry{display:flex;align-items:center;gap:9px;padding:8px 12px;background:var(--s2);border-radius:10px;animation:popIn .3s ease;}
+@keyframes popIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+.pdot{width:9px;height:9px;border-radius:50%;}
+.waiting{color:#333355;font-size:12px;font-style:italic;}
+.mbrow{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin-top:10px;}
+
+/* ── BUTTONS ── */
+.btn{font-family:'Outfit',sans-serif;font-weight:700;letter-spacing:.5px;padding:11px 24px;border-radius:12px;border:none;cursor:pointer;transition:.2s;font-size:14px;}
+.btn-pink{background:linear-gradient(135deg,var(--pink),#aa1040);color:white;box-shadow:0 0 18px rgba(255,45,107,.35);}
+.btn-pink:hover{box-shadow:0 0 32px rgba(255,45,107,.6);transform:translateY(-2px);}
+.btn-cyan{background:linear-gradient(135deg,var(--cyan),#0099bb);color:#001a20;box-shadow:0 0 18px rgba(0,229,255,.3);}
+.btn-cyan:hover{box-shadow:0 0 32px rgba(0,229,255,.6);transform:translateY(-2px);}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1008;box-shadow:0 0 18px rgba(245,197,66,.35);}
+.btn-gold:hover{box-shadow:0 0 32px rgba(245,197,66,.6);transform:translateY(-2px);}
+.btn-ghost{background:transparent;border:1px solid #333355;color:var(--dim);}
+.btn-ghost:hover{border-color:var(--dim);color:var(--text);}
+.btn-green{background:linear-gradient(135deg,var(--green),#00b07a);color:#001a0f;box-shadow:0 0 18px rgba(0,245,160,.3);}
+.btn-green:hover{box-shadow:0 0 32px rgba(0,245,160,.6);transform:translateY(-2px);}
+
+/* ── BT SETUP ── */
+#bt-setup{background:radial-gradient(ellipse 80% 50% at 50% -5%,#1a0518 0%,var(--bg) 70%);align-items:center;justify-content:center;gap:14px;padding:24px 20px;overflow-y:auto;}
+.ptitle{font-family:'Outfit',sans-serif;font-size:clamp(22px,4vw,44px);font-weight:900;}
+.srow{display:flex;gap:9px;width:100%;max-width:580px;}
+.srow input{flex:1;background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:.2s;}
+.srow input:focus{border-color:var(--pink);}
+.srow button{background:linear-gradient(135deg,var(--pink),#aa1040);border:none;border-radius:10px;padding:10px 16px;color:white;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;}
+.rdrop{background:var(--s1);border:1px solid var(--border);border-radius:12px;width:100%;max-width:580px;max-height:180px;overflow-y:auto;display:none;}
+.rdrop.open{display:block;}
+.ritem{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;transition:.15s;}
+.ritem:hover{background:rgba(255,255,255,.04);}
+.ritem img{width:40px;height:30px;object-fit:cover;border-radius:5px;}
+.ri-t{font-size:12px;}.ri-c{font-size:11px;color:var(--dim);}
+.plwrap{width:100%;max-width:580px;display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;}
+.plitem{background:var(--s1);border:1px solid var(--border);border-radius:9px;padding:8px 12px;display:flex;align-items:center;gap:10px;}
+.plitem img{width:40px;height:30px;object-fit:cover;border-radius:5px;}
+.pli-inf{flex:1;}.pli-t{font-size:12px;}.pli-c{font-size:11px;color:var(--dim);}
+.plrm{background:none;border:none;color:var(--pink);cursor:pointer;font-size:13px;}
+.slbl{font-size:10px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;align-self:flex-start;}
+.stepbtns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+
+/* ── QUIZ SETUP ── */
+#quiz-setup{background:radial-gradient(ellipse 80% 50% at 50% -5%,#00112a 0%,var(--bg) 70%);align-items:center;justify-content:center;gap:14px;padding:24px 20px;overflow-y:auto;}
+.catgrid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:660px;}
+.cpill{padding:7px 14px;border-radius:22px;border:1px solid var(--border);background:var(--s1);color:var(--dim);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:.2s;}
+.cpill.on{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.08);}
+.qcrow{display:flex;gap:8px;}
+.qcpill{padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:var(--s1);color:var(--dim);font-size:12px;cursor:pointer;transition:.2s;}
+.qcpill.on{border-color:var(--cyan);color:var(--cyan);}
+.mem-info{font-size:11px;color:var(--dim);text-align:center;max-width:480px;line-height:1.6;}
+.mem-info span{color:var(--cyan);}
+
+/* ── BT GAME ── */
+#bt-game{background:radial-gradient(ellipse 100% 50% at 50% 0%,#1a0010 0%,var(--bg) 60%);padding:20px 28px;gap:12px;}
+.gtop{display:flex;justify-content:space-between;align-items:center;width:100%;}
+.rlbl{font-size:10px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;}
+.rval{font-family:'Outfit',sans-serif;font-size:28px;font-weight:900;color:var(--gold);}
+.schips{display:flex;gap:7px;flex-wrap:wrap;}
+.chip{display:flex;align-items:center;gap:7px;padding:4px 11px;border-radius:18px;border:1px solid var(--border);background:var(--s1);font-size:12px;}
+.cdot{width:7px;height:7px;border-radius:50%;}
+.cpts{font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;}
+.garea{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.mcard{background:var(--s1);border:1px solid rgba(255,45,107,.2);border-radius:22px;padding:24px 36px;text-align:center;width:100%;max-width:500px;}
+.mst{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--dim);margin-bottom:12px;}
+.pbtn{width:72px;height:72px;border-radius:50%;margin:0 auto 12px;background:linear-gradient(135deg,var(--pink),#aa1040);border:none;cursor:pointer;font-size:24px;box-shadow:0 0 24px rgba(255,45,107,.5);transition:.2s;display:flex;align-items:center;justify-content:center;color:white;}
+.pbtn:hover{transform:scale(1.08);}
+.pbtn.on{animation:throb .6s ease-in-out infinite alternate;}
+@keyframes throb{from{transform:scale(1);}to{transform:scale(1.06);}}
+.tnum{font-family:'Outfit',sans-serif;font-size:40px;font-weight:900;color:var(--gold);}
+.tbg{width:100%;height:5px;background:var(--s2);border-radius:3px;margin-top:7px;overflow:hidden;}
+.tfill{height:100%;background:linear-gradient(90deg,var(--green),var(--gold),var(--pink));border-radius:3px;transition:width 1s linear;}
+.revc{background:var(--s2);border:1px solid var(--green);border-radius:11px;padding:12px 20px;text-align:center;width:100%;max-width:500px;display:none;}
+.revc.show{display:block;animation:pop .3s ease;}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.reva{font-size:10px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;}
+.revt{font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:var(--green);margin-top:4px;}
+.bgrid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:100%;}
+.bcard{min-width:100px;padding:12px 14px;border-radius:11px;border:2px solid transparent;cursor:pointer;transition:.15s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.bname{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;}
+.bpts{font-size:10px;opacity:.7;}
+.bcard:hover:not(:disabled){transform:scale(1.05);}
+.bcard:disabled{opacity:.3;cursor:not-allowed;}
+.bcard.ok{box-shadow:0 0 18px var(--green)!important;}
+.bcard.ko{opacity:.3!important;}
+.nrow{display:flex;gap:10px;justify-content:center;}
+
+/* ── QUIZ GAME ── */
+#quiz-game{background:radial-gradient(ellipse 100% 60% at 50% -10%,#0a0020 0%,#050508 60%);padding:16px 24px;gap:12px;}
+.qcard{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:22px 36px;width:100%;max-width:960px;text-align:center;backdrop-filter:blur(10px);}
+.qcat{font-size:10px;letter-spacing:5px;color:#9999bb;text-transform:uppercase;margin-bottom:8px;font-family:'DM Mono',monospace;}
+.qtxt{font-family:'Outfit',sans-serif;font-size:clamp(20px,2.8vw,36px);font-weight:900;line-height:1.3;color:white;}
+.qsrc{font-size:10px;color:#444466;margin-top:6px;}
+.agrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:960px;}
+.abtn{border:none;border-radius:18px;padding:18px 20px;cursor:pointer;transition:.12s;display:flex;align-items:center;justify-content:center;min-height:88px;font-family:'Outfit',sans-serif;font-size:clamp(14px,1.6vw,21px);font-weight:800;color:white;text-shadow:0 2px 4px rgba(0,0,0,.4);box-shadow:0 6px 0 rgba(0,0,0,.3),0 8px 20px rgba(0,0,0,.3);text-align:center;animation:tileIn .4s cubic-bezier(.34,1.56,.64,1) both;}
+.abtn:nth-child(1){background:linear-gradient(135deg,#e63946,#c1121f);animation-delay:.05s;}
+.abtn:nth-child(2){background:linear-gradient(135deg,#2196f3,#0d47a1);animation-delay:.1s;}
+.abtn:nth-child(3){background:linear-gradient(135deg,#43a047,#1b5e20);animation-delay:.15s;}
+.abtn:nth-child(4){background:linear-gradient(135deg,#ffc107,#e65100);animation-delay:.2s;}
+@keyframes tileIn{from{transform:scale(.7) translateY(20px);opacity:0;}to{transform:scale(1) translateY(0);opacity:1;}}
+.abtn:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 9px 0 rgba(0,0,0,.3),0 12px 24px rgba(0,0,0,.3);}
+.abtn:active:not(:disabled){transform:translateY(2px);box-shadow:0 3px 0 rgba(0,0,0,.3);}
+.abtn.right{box-shadow:0 0 0 5px white,0 0 30px rgba(255,255,255,.5)!important;transform:scale(1.04)!important;}
+.abtn.wrong{opacity:.3;transform:scale(.96);}
+.abtn:disabled{cursor:not-allowed;}
+.qtimer-wrap{width:100%;max-width:960px;}
+.qtimer-num{font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;color:var(--gold);text-align:center;margin-top:4px;}
+.auto-bar{width:100%;height:4px;background:var(--s2);border-radius:2px;overflow:hidden;margin-top:4px;}
+.auto-fill{height:100%;background:var(--cyan);border-radius:2px;transition:width 3s linear;}
+
+/* ── SCOREBOARD ── */
+#scoreboard{background:radial-gradient(ellipse 80% 50% at 50% -5%,#100a2a 0%,var(--bg) 70%);align-items:center;padding:16px 20px 20px;overflow-y:auto;gap:4px;}
+.podlist{width:100%;max-width:600px;display:flex;flex-direction:column;gap:8px;}
+.prow{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:10px 16px;display:flex;align-items:center;gap:12px;animation:slr .4s ease both;}
+@keyframes slr{from{transform:translateX(-20px);opacity:0}to{transform:translateX(0);opacity:1}}
+.prow.p1{border-color:var(--gold);box-shadow:0 0 20px rgba(245,197,66,.15);}
+.prow.p2{border-color:#aaaacc;}
+.prow.p3{border-color:#cd8b4a;}
+.prank{font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;min-width:36px;}
+.pname{font-family:'Outfit',sans-serif;font-size:17px;font-weight:700;flex:1;}
+.pbw{flex:2;height:5px;background:var(--s2);border-radius:3px;overflow:hidden;}
+.pb{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(.22,1,.36,1);}
+.ppts{font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;min-width:60px;text-align:right;}
+.section-title{font-family:'Outfit',sans-serif;font-size:16px;font-weight:900;margin:12px 0 6px;color:var(--gold);width:100%;max-width:600px;}
+
+/* ── MODAL BUZZ ── */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:100;backdrop-filter:blur(4px);}
+.ov.open{display:flex;}
+.ov-t{font-size:10px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;}
+.ov-p{font-family:'Outfit',sans-serif;font-size:48px;font-weight:900;}
+.ov-s{font-size:13px;color:var(--dim);}
+.ov-b{display:flex;gap:12px;}
+
+/* ── STATUS ── */
+.sbar{position:fixed;top:10px;right:14px;font-size:11px;padding:4px 11px;border-radius:18px;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;gap:5px;z-index:50;}
+.sled{width:7px;height:7px;border-radius:50%;background:#444;}
+.sled.ok{background:var(--green);box-shadow:0 0 6px var(--green);}
+.sled.err{background:var(--pink);}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--border);padding:10px 20px;border-radius:10px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;z-index:1000;white-space:nowrap;}
+.toast.show{opacity:1;}
+#yt-player{position:fixed;left:-9999px;width:1px;height:1px;}
+.cf{position:fixed;border-radius:2px;animation:cff linear both;pointer-events:none;z-index:9998;}
+@keyframes cff{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
+.loading-q{display:flex;align-items:center;gap:10px;color:var(--dim);font-size:13px;}
+.spinner{width:18px;height:18px;border:2px solid var(--s2);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="sbar"><div class="sled" id="sled"></div><span id="stxt">Connexion...</span></div>
+
+<div class="ov" id="pt-modal">
+  <div class="ov-t">PREMIER BUZZ !</div>
+  <div class="ov-p" id="pt-name">—</div>
+  <div class="ov-s">A trouvé la bonne réponse ?</div>
+  <div class="ov-b">
+    <button class="btn btn-gold" onclick="award(true)">✓ CORRECT +1</button>
+    <button class="btn btn-pink" onclick="award(false)">✗ RATÉ</button>
+  </div>
+</div>
+
+<div id="yt-player"></div>
+<div class="toast" id="toast"></div>
+
+<!-- ══ LOBBY ══ -->
+<div class="screen active" id="lobby">
+  <div style="text-align:center">
+    <div class="logo">AMUSOIR</div>
+    <div class="logo-sub">Blind Test · Quiz · Soirée</div>
+  </div>
+  <div class="lobby-grid">
+    <div class="panel">
+      <h3>Rejoindre la partie</h3>
+      <div id="qr-box"><div style="color:#999;font-size:12px;">...</div></div>
+      <div class="room-code" id="rc">——</div>
+      <div style="font-size:10px;color:#333355;text-align:center;margin-top:4px;max-width:175px;word-break:break-all;" id="rurl"></div>
+    </div>
+    <div class="panel">
+      <h3>Joueurs (<span id="pcnt">0</span>)</h3>
+      <div class="plist" id="plist"><div class="waiting">En attente...</div></div>
+      <div class="mbrow">
+        <button class="btn btn-pink" onclick="goSetup('bt')">🎵 BLIND TEST</button>
+        <button class="btn btn-cyan" onclick="goSetup('quiz')">🧠 QUIZ</button>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;">
+    <label style="font-size:11px;color:var(--dim);">Clé YouTube API :</label>
+    <input id="ytkey" type="text" placeholder="AIzaSy..." style="background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;width:240px;">
+  </div>
+</div>
+
+<!-- ══ BT SETUP ══ -->
+<div class="screen" id="bt-setup">
+  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 28px;padding-top:28px;">
+    <div class="ptitle" style="color:var(--pink)">🎵 Blind Test</div>
+    <button class="btn btn-ghost" onclick="go('lobby')">← Retour</button>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px 28px;overflow-y:auto;">
+    <div class="srow">
+      <input type="text" id="yts" placeholder="Chercher un morceau YouTube..." onkeydown="if(event.key==='Enter')searchYT()">
+      <button onclick="searchYT()">CHERCHER</button>
+    </div>
+    <div class="rdrop" id="rdrop"></div>
+    <p class="slbl">PLAYLIST (<span id="plcnt">0</span> morceaux)</p>
+    <div class="plwrap" id="plwrap"></div>
+    <div class="stepbtns" style="margin-top:6px;">
+      <button class="btn btn-ghost" onclick="go('lobby')">← Retour</button>
+      <button class="btn btn-pink" onclick="startBT()">LANCER →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ QUIZ SETUP ══ -->
+<div class="screen" id="quiz-setup">
+  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 28px;padding-top:28px;">
+    <div class="ptitle" style="color:var(--cyan)">🧠 Quiz</div>
+    <button class="btn btn-ghost" onclick="go('lobby')">← Retour</button>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px 28px;overflow-y:auto;">
+    <p class="slbl">CATÉGORIES</p>
+    <div class="catgrid" id="catgrid"></div>
+    <p class="slbl">NOMBRE DE QUESTIONS</p>
+    <div class="qcrow">
+      <div class="qcpill on" onclick="setQC(10,this)">10</div>
+      <div class="qcpill" onclick="setQC(20,this)">20</div>
+      <div class="qcpill" onclick="setQC(30,this)">30</div>
+    </div>
+    <div class="mem-info" id="mem-info">Chargement des statistiques...</div>
+    <div class="stepbtns" style="margin-top:6px;">
+      <button class="btn btn-ghost" onclick="go('lobby')">← Retour</button>
+      <button class="btn btn-ghost" onclick="resetMemory()" style="font-size:12px;">🔄 Réinitialiser l'historique</button>
+      <button class="btn btn-cyan" onclick="startQuiz()">LANCER →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BT GAME ══ -->
+<div class="screen" id="bt-game">
+  <div class="gtop">
+    <div><div class="rlbl">MANCHE</div><div class="rval"><span id="btr">1</span>/<span id="bttot">—</span></div></div>
+    <div class="schips" id="btsc"></div>
+    <button class="btn btn-ghost" style="font-size:11px;padding:6px 12px" onclick="endGame()">FIN</button>
+  </div>
+  <div class="garea">
+    <div class="mcard">
+      <div class="mst" id="mst">PRÊT</div>
+      <button class="pbtn" id="pbtn" onclick="togglePlay()">▶</button>
+      <div class="tnum" id="tnum">30</div>
+      <div class="tbg"><div class="tfill" id="tfill" style="width:100%"></div></div>
+    </div>
+    <div class="revc" id="revc"><div class="reva" id="reva">—</div><div class="revt" id="revt">—</div></div>
+    <div class="bgrid" id="bgrid"></div>
+    <div class="nrow" id="btnext" style="display:none"><button class="btn btn-pink" onclick="nextBT()">MANCHE SUIVANTE →</button></div>
+  </div>
+</div>
+
+<!-- ══ QUIZ GAME ══ -->
+<div class="screen" id="quiz-game">
+  <div class="gtop">
+    <div><div class="rlbl">QUESTION</div><div class="rval"><span id="qn">1</span>/<span id="qtot">—</span></div></div>
+    <div class="schips" id="qsc"></div>
+    <button class="btn btn-ghost" style="font-size:11px;padding:6px 12px" onclick="endGame()">FIN</button>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:0 24px;">
+    <div class="qcard">
+      <div class="qcat" id="qcat">—</div>
+      <div class="qtxt" id="qtxt">—</div>
+    </div>
+    <div class="agrid" id="agrid"></div>
+    <div class="qtimer-wrap">
+      <div class="tbg"><div class="tfill" id="qtfill" style="width:100%"></div></div>
+      <div class="qtimer-num" id="qtnum">20</div>
+      <div class="auto-bar" id="auto-bar" style="display:none"><div class="auto-fill" id="auto-fill" style="width:100%"></div></div>
+    </div>
+    <div class="nrow" id="qnext" style="display:none"><button class="btn btn-cyan" onclick="nextQ()">SUIVANTE →</button></div>
+  </div>
+</div>
+
+<!-- ══ SCOREBOARD ══ -->
+<div class="screen" id="scoreboard">
+  <div style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:900;text-align:center;padding-top:16px;">🏆 RÉSULTATS</div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 20px 16px;overflow-y:auto;">
+    <div id="podlist" style="width:100%;max-width:600px;"></div>
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button class="btn btn-ghost" onclick="go('lobby')">🏠 ACCUEIL</button>
+      <button class="btn btn-gold" onclick="replay()">🔄 REJOUER</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+// ── QR CODE INLINE (aucune dépendance externe) ──
+// Utilise l'API de partage ou affiche le lien + un canvas simple
+function makeQR(url, container) {
+  container.innerHTML = '';
+  // Essaie l'API native QR si disponible
+  try {
+    // On crée un canvas avec le lien encodé visuellement
+    const size = 160;
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, size, size);
+    // Utilise TextEncoder pour créer un QR simplifié
+    // Fallback: afficher le lien sous forme lisible + bouton copier
+    const inner = document.createElement('div');
+    inner.style.cssText = 'width:160px;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;gap:8px;';
+    const txt = document.createElement('p');
+    txt.style.cssText = 'font-size:8px;color:#000;word-break:break-all;text-align:center;line-height:1.4;';
+    txt.textContent = url;
+    const copyBtn = document.createElement('button');
+    copyBtn.style.cssText = 'background:#000;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:10px;cursor:pointer;';
+    copyBtn.textContent = '📋 Copier le lien';
+    copyBtn.onclick = () => { navigator.clipboard.writeText(url).then(()=>{copyBtn.textContent='✅ Copié !';setTimeout(()=>copyBtn.textContent='📋 Copier le lien',2000);}); };
+    inner.appendChild(txt);
+    inner.appendChild(copyBtn);
+    container.appendChild(inner);
+  } catch(e) {
+    container.innerHTML = '<p style="font-size:9px;color:#000;padding:8px;">'+url+'</p>';
+  }
+  // Essayer de charger un QR via image en arrière-plan
+  const img = new Image();
+  img.onload = () => { container.innerHTML = ''; img.style.cssText='display:block;border-radius:6px;width:160px;height:160px;'; container.appendChild(img); };
+  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(url);
+}
+
+// ════════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════════
+const ABLY_KEY = 'U7BRyw.wc4MuQ:5b4cqlgpCcY0b0-Hhl3if0pG9LqsshyQh9ovTu7j9KQ';
+const COLORS = ['#ff2d6b','#00e5ff','#00f5a0','#f5c542','#ff7b00','#c77dff','#ff9ef5','#4cc9f0','#f72585','#7209b7'];
+const MEM_KEY = 'amusoir_seen_questions';
+const MEM_DAYS = 30; // questions évitées pendant 30 jours
+
+// ════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════
+let roomCode='', players={}, mode='', playlist=[];
+let btRound=0, btPlaying=false, btTimer=null, btTime=30, buzzed=null;
+let quizQs=[], quizIdx=0, quizCount=10, quizTimer=null, quizTime=20, quizDone=false;
+let quizAnswers={}, quizStartTime=0, autoNextTimer=null;
+let selCats=[], ablyChan=null;
+let ytPlayer=null, ytReady=false;
+
+// ════════════════════════════════════════════════════
+// CATÉGORIES (correspondance OpenTDB + questions manuelles)
+// ════════════════════════════════════════════════════
+const CATEGORIES = [
+  { id:'musique',    label:'🎵 Musique',          otdb:12  },
+  { id:'cinema',     label:'🎬 Cinéma & TV',       otdb:11  },
+  { id:'geo',        label:'🌍 Géographie',         otdb:22  },
+  { id:'sport',      label:'⚽ Sport',              otdb:21  },
+  { id:'science',    label:'🔬 Science & Nature',   otdb:17  },
+  { id:'histoire',   label:'📚 Histoire',           otdb:23  },
+  { id:'gastro',     label:'🍽️ Gastronomie',        otdb:0   },
+  { id:'tech',       label:'💻 Technologie',        otdb:18  },
+  { id:'art',        label:'🎨 Art & Littérature',  otdb:25  },
+  { id:'people',     label:'🌟 Célébrités',         otdb:26  },
+  { id:'general',    label:'🎭 Culture Générale',   otdb:9   },
+  { id:'anime',      label:'🎮 Jeux Vidéo',         otdb:15  },
+];
+
+// ════════════════════════════════════════════════════
+// BASE DE QUESTIONS MANUELLES (fallback + complément)
+// ════════════════════════════════════════════════════
+const MANUAL_QUESTIONS = {
+  musique:[
+    {q:"Quel artiste a sorti 'Thriller' ?",a:"Michael Jackson",c:["Michael Jackson","Prince","Madonna","David Bowie"]},
+    {q:"Dans quel pays est né Bob Marley ?",a:"Jamaïque",c:["Jamaïque","Haïti","Trinidad","Barbade"]},
+    {q:"Qui chante 'Rolling in the Deep' ?",a:"Adele",c:["Adele","Beyoncé","Rihanna","Amy Winehouse"]},
+    {q:"Quel groupe : 'Bohemian Rhapsody' ?",a:"Queen",c:["Queen","The Beatles","Led Zeppelin","Rolling Stones"]},
+    {q:"Surnommée 'La Môme' ?",a:"Édith Piaf",c:["Édith Piaf","Dalida","Barbara","Juliette Gréco"]},
+    {q:"Instrument de Miles Davis ?",a:"Trompette",c:["Trompette","Saxophone","Batterie","Piano"]},
+    {q:"Vrai nom d'Eminem ?",a:"Marshall Mathers",c:["Marshall Mathers","Robert Van Winkle","Curtis Jackson","Shawn Carter"]},
+    {q:"Qui chante 'Shape of You' ?",a:"Ed Sheeran",c:["Ed Sheeran","Harry Styles","Sam Smith","Justin Bieber"]},
+    {q:"Quel groupe chante 'Hotel California' ?",a:"Eagles",c:["Eagles","Fleetwood Mac","The Doors","Steely Dan"]},
+    {q:"Qui a sorti 'Bad Guy' ?",a:"Billie Eilish",c:["Billie Eilish","Olivia Rodrigo","Dua Lipa","Ariana Grande"]},
+    {q:"Vrai nom de Lady Gaga ?",a:"Stefani Germanotta",c:["Stefani Germanotta","Alecia Moore","Robyn Fenty","Amethyst Kelly"]},
+    {q:"Quel groupe a sorti 'Dark Side of the Moon' ?",a:"Pink Floyd",c:["Pink Floyd","Led Zeppelin","The Doors","Deep Purple"]},
+    {q:"Qui a composé les 4 saisons ?",a:"Vivaldi",c:["Vivaldi","Mozart","Bach","Beethoven"]},
+    {q:"Qui chante 'Starman' ?",a:"David Bowie",c:["David Bowie","Elton John","T. Rex","Roxy Music"]},
+    {q:"Instrument de Yo-Yo Ma ?",a:"Violoncelle",c:["Violoncelle","Violon","Alto","Contrebasse"]},
+    {q:"Chanteur français de 'La Javanaise' ?",a:"Serge Gainsbourg",c:["Serge Gainsbourg","Jacques Brel","Georges Brassens","Charles Aznavour"]},
+    {q:"Quel artiste est derrière 'Smells Like Teen Spirit' ?",a:"Nirvana",c:["Nirvana","Pearl Jam","Soundgarden","Alice in Chains"]},
+    {q:"En quelle année sort 'Nevermind' de Nirvana ?",a:"1991",c:["1991","1989","1993","1987"]},
+    {q:"Combien de membres dans BTS ?",a:"7",c:["7","5","6","4"]},
+    {q:"Qui a popularisé le genre 'reggaeton' en France ?",a:"J Balvin",c:["J Balvin","Maluma","Bad Bunny","Daddy Yankee"]},
+  ],
+  cinema:[
+    {q:"Réalisateur d''Inception' ?",a:"Christopher Nolan",c:["Christopher Nolan","James Cameron","Spielberg","Ridley Scott"]},
+    {q:"Film avec 'I'll be back' ?",a:"Terminator",c:["Terminator","RoboCop","Die Hard","Total Recall"]},
+    {q:"Actrice d'Hermione Granger ?",a:"Emma Watson",c:["Emma Watson","Emma Stone","Keira Knightley","Natalie Portman"]},
+    {q:"Acteur de Jack Sparrow ?",a:"Johnny Depp",c:["Johnny Depp","Brad Pitt","Tom Cruise","Orlando Bloom"]},
+    {q:"Plus gros box-office mondial ?",a:"Avatar",c:["Avatar","Avengers Endgame","Titanic","Star Wars"]},
+    {q:"Palme d'Or 2019 ?",a:"Parasite",c:["Parasite","Burning","Shoplifters","Portrait de la jeune fille"]},
+    {q:"Disney avec Simba ?",a:"Le Roi Lion",c:["Le Roi Lion","Bambi","Jungle Book","Tarzan"]},
+    {q:"Vincent Vega dans Pulp Fiction ?",a:"John Travolta",c:["John Travolta","Samuel L. Jackson","Bruce Willis","Harvey Keitel"]},
+    {q:"Réalisateur de Star Wars (1977) ?",a:"George Lucas",c:["George Lucas","Spielberg","Francis Ford Coppola","Brian De Palma"]},
+    {q:"Film de la scène de la douche mythique ?",a:"Psychose",c:["Psychose","Vertigo","La Mort aux trousses","Les Oiseaux"]},
+    {q:"Acteur de Tony Stark / Iron Man ?",a:"Robert Downey Jr.",c:["Robert Downey Jr.","Chris Evans","Mark Ruffalo","Jeremy Renner"]},
+    {q:"Qui joue Forrest Gump ?",a:"Tom Hanks",c:["Tom Hanks","Robin Williams","John Travolta","Kevin Costner"]},
+    {q:"Quel film Pixar suit un rat cuisinier ?",a:"Ratatouille",c:["Ratatouille","Coco","Soul","Brave"]},
+    {q:"Réalisateur d''Amélie Poulain' ?",a:"Jean-Pierre Jeunet",c:["Jean-Pierre Jeunet","Luc Besson","Olivier Assayas","François Ozon"]},
+    {q:"Dans 'Matrix', quelle pilule prend Neo ?",a:"La rouge",c:["La rouge","La bleue","La verte","La jaune"]},
+    {q:"Compositeur des musiques de Spielberg ?",a:"John Williams",c:["John Williams","Hans Zimmer","Ennio Morricone","Bernard Herrmann"]},
+    {q:"Film de Kubrick dans un hôtel isolé ?",a:"Shining",c:["Shining","Eyes Wide Shut","Barry Lyndon","Full Metal Jacket"]},
+    {q:"Qui joue Hannibal Lecter dans 'Silence des Agneaux' ?",a:"Anthony Hopkins",c:["Anthony Hopkins","Brian Cox","Mads Mikkelsen","Ralph Fiennes"]},
+    {q:"Quel film a lancé la saga Bond en 1962 ?",a:"Dr. No",c:["Dr. No","Goldfinger","Thunderball","On Her Majesty's Secret Service"]},
+    {q:"Film culte de Sergio Leone avec Eastwood ?",a:"Le Bon, la Brute et le Truand",c:["Le Bon, la Brute et le Truand","Il était une fois dans l'Ouest","Pour une poignée de dollars","Pour quelques dollars de plus"]},
+  ],
+  geo:[
+    {q:"Capitale de l'Australie ?",a:"Canberra",c:["Canberra","Sydney","Melbourne","Perth"]},
+    {q:"Plus grand pays du monde ?",a:"Russie",c:["Russie","Canada","Chine","États-Unis"]},
+    {q:"Plus haute montagne du monde ?",a:"Everest",c:["Everest","K2","Aconcagua","Mont Blanc"]},
+    {q:"Pays de Machu Picchu ?",a:"Pérou",c:["Pérou","Bolivie","Colombie","Équateur"]},
+    {q:"Fleuve du Caire ?",a:"Le Nil",c:["Le Nil","Le Congo","Le Zambèze","Le Niger"]},
+    {q:"'La Ville Lumière' ?",a:"Paris",c:["Paris","Rome","Vienne","Prague"]},
+    {q:"Détroit entre Espagne et Maroc ?",a:"Gibraltar",c:["Gibraltar","Bosphore","Malacca","Béring"]},
+    {q:"Capitale du Japon ?",a:"Tokyo",c:["Tokyo","Osaka","Kyoto","Hiroshima"]},
+    {q:"Pays le plus peuplé du monde ?",a:"Inde",c:["Inde","Chine","États-Unis","Indonésie"]},
+    {q:"Plus long fleuve du monde ?",a:"Le Nil",c:["Le Nil","L'Amazone","Le Mississippi","Le Yangtsé"]},
+    {q:"Tour de Pise : dans quel pays ?",a:"Italie",c:["Italie","Espagne","Portugal","Grèce"]},
+    {q:"Plus petit pays du monde ?",a:"Vatican",c:["Vatican","Monaco","Saint-Marin","Liechtenstein"]},
+    {q:"Capitale du Brésil ?",a:"Brasília",c:["Brasília","Rio de Janeiro","São Paulo","Salvador"]},
+    {q:"Ville sur deux continents ?",a:"Istanbul",c:["Istanbul","Moscou","Athènes","Budapest"]},
+    {q:"Plus grand désert du monde ?",a:"Sahara",c:["Sahara","Gobi","Atacama","Antarctique"]},
+    {q:"Pays d'Angkor Wat ?",a:"Cambodge",c:["Cambodge","Thaïlande","Vietnam","Myanmar"]},
+    {q:"Monnaie du Japon ?",a:"Yen",c:["Yen","Yuan","Won","Baht"]},
+    {q:"Quel pays est à la fois en Europe et en Asie ?",a:"Turquie",c:["Turquie","Russie","Kazakhstan","Géorgie"]},
+    {q:"Pays avec la plus longue côte au monde ?",a:"Canada",c:["Canada","Russie","Australie","Indonésie"]},
+    {q:"Capitale de l'Argentine ?",a:"Buenos Aires",c:["Buenos Aires","Montevideo","Santiago","Lima"]},
+  ],
+  sport:[
+    {q:"Coupe du Monde 2022 : quel pays hôte ?",a:"Qatar",c:["Qatar","Arabie Saoudite","Russie","Brésil"]},
+    {q:"Pays le plus titré en Coupe du Monde ?",a:"Brésil (5)",c:["Brésil (5)","Allemagne (4)","Italie (4)","Argentine (3)"]},
+    {q:"Sport de Rafael Nadal ?",a:"Tennis",c:["Tennis","Golf","Padel","Squash"]},
+    {q:"23 médailles d'or olympiques : qui ?",a:"Michael Phelps",c:["Michael Phelps","Ian Thorpe","Mark Spitz","Caeleb Dressel"]},
+    {q:"Club avec le plus de Ligues des Champions ?",a:"Real Madrid",c:["Real Madrid","FC Barcelone","Liverpool","Bayern Munich"]},
+    {q:"Record du 100m : 9s58 ?",a:"Usain Bolt",c:["Usain Bolt","Asafa Powell","Tyson Gay","Justin Gatlin"]},
+    {q:"Sport avec un volant ?",a:"Badminton",c:["Badminton","Tennis de table","Squash","Padel"]},
+    {q:"Sport de LeBron James ?",a:"Basketball",c:["Basketball","Football","Baseball","Hockey"]},
+    {q:"Joueurs dans une équipe de rugby à XV ?",a:"15",c:["15","13","11","14"]},
+    {q:"Pays vainqueur de la Coupe du Monde 2018 ?",a:"France",c:["France","Croatie","Belgique","Angleterre"]},
+    {q:"JO d'été 2024 : quelle ville ?",a:"Paris",c:["Paris","Los Angeles","Brisbane","Tokyo"]},
+    {q:"Nageur français médaillé d'or aux JO 2024 ?",a:"Léon Marchand",c:["Léon Marchand","Florent Manaudou","Yannick Agnel","Camille Lacourt"]},
+    {q:"Points d'un essai au rugby à XV ?",a:"5",c:["5","3","4","6"]},
+    {q:"En quelle année la France gagne sa 1ère Coupe du Monde ?",a:"1998",c:["1998","2006","2010","2018"]},
+    {q:"Adversaire d'Ali dans le 'Thrilla in Manila' ?",a:"Joe Frazier",c:["Joe Frazier","George Foreman","Ken Norton","Sonny Liston"]},
+    {q:"Pays inventeur du judo ?",a:"Japon",c:["Japon","Chine","Corée","Brésil"]},
+    {q:"Record de buts en Coupe du Monde (tous temps) ?",a:"Miroslav Klose",c:["Miroslav Klose","Ronaldo (Brésil)","Just Fontaine","Gerd Müller"]},
+    {q:"Quel sport se joue avec un palet ?",a:"Hockey sur glace",c:["Hockey sur glace","Curling","Bandy","Ringuette"]},
+    {q:"Quel joueur de foot s'appelle CR7 ?",a:"Cristiano Ronaldo",c:["Cristiano Ronaldo","Carlos Ramos","Cláudio Renan","César Rodríguez"]},
+    {q:"Combien de sets en Grand Chelem (hommes) pour gagner ?",a:"3 sets gagnants",c:["3 sets gagnants","2 sets gagnants","4 sets gagnants","5 sets gagnants"]},
+  ],
+  science:[
+    {q:"Formule de l'eau ?",a:"H₂O",c:["H₂O","CO₂","NaCl","O₂"]},
+    {q:"Première marche sur la Lune ?",a:"1969",c:["1969","1965","1972","1971"]},
+    {q:"Nombre d'os dans le corps adulte ?",a:"206",c:["206","189","214","232"]},
+    {q:"Élément le plus abondant dans l'univers ?",a:"Hydrogène",c:["Hydrogène","Hélium","Oxygène","Carbone"]},
+    {q:"Planète la plus proche du Soleil ?",a:"Mercure",c:["Mercure","Vénus","Mars","Terre"]},
+    {q:"Découvreur de la pénicilline ?",a:"Alexander Fleming",c:["Alexander Fleming","Louis Pasteur","Marie Curie","Robert Koch"]},
+    {q:"Vitesse de la lumière ?",a:"300 000 km/s",c:["300 000 km/s","150 000 km/s","450 000 km/s","200 000 km/s"]},
+    {q:"78% de l'atmosphère terrestre ?",a:"Azote",c:["Azote","Oxygène","Argon","CO₂"]},
+    {q:"Chromosomes dans le corps humain ?",a:"46",c:["46","23","48","44"]},
+    {q:"Plus grand organe du corps humain ?",a:"La peau",c:["La peau","Le foie","Le cerveau","L'intestin"]},
+    {q:"Planète avec le plus de lunes ?",a:"Saturne",c:["Saturne","Jupiter","Uranus","Neptune"]},
+    {q:"Auteur de la théorie de la relativité ?",a:"Einstein",c:["Einstein","Newton","Bohr","Heisenberg"]},
+    {q:"Gaz produit lors de la photosynthèse ?",a:"Oxygène",c:["Oxygène","CO₂","Azote","Hydrogène"]},
+    {q:"Métal le plus léger ?",a:"Lithium",c:["Lithium","Aluminium","Magnésium","Béryllium"]},
+    {q:"Température d'ébullition de l'eau ?",a:"100°C",c:["100°C","90°C","110°C","120°C"]},
+    {q:"Durée d'une révolution de la Terre ?",a:"365,25 jours",c:["365,25 jours","365 jours","366 jours","364 jours"]},
+    {q:"Découvreur de la radioactivité ?",a:"Henri Becquerel",c:["Henri Becquerel","Marie Curie","Pierre Curie","Ernest Rutherford"]},
+    {q:"Composition principale du Soleil ?",a:"Hydrogène et Hélium",c:["Hydrogène et Hélium","Oxygène et Carbone","Fer et Nickel","Azote et Argon"]},
+    {q:"Pattes d'une araignée ?",a:"8",c:["8","6","10","12"]},
+    {q:"Plus rapide des animaux terrestres ?",a:"Guépard",c:["Guépard","Lion","Antilope","Autruche"]},
+  ],
+  histoire:[
+    {q:"Révolution française : quelle année ?",a:"1789",c:["1789","1776","1804","1815"]},
+    {q:"Chute du mur de Berlin ?",a:"1989",c:["1989","1991","1985","1987"]},
+    {q:"1er président américain ?",a:"George Washington",c:["George Washington","Thomas Jefferson","Lincoln","Benjamin Franklin"]},
+    {q:"Colomb découvre l'Amérique ?",a:"1492",c:["1492","1488","1500","1506"]},
+    {q:"Traité fin 1ère Guerre Mondiale ?",a:"Traité de Versailles",c:["Traité de Versailles","Traité de Paris","Traité de Westphalie","Traité de Trianon"]},
+    {q:"Fondation légendaire de Rome ?",a:"753 av. J.-C.",c:["753 av. J.-C.","509 av. J.-C.","264 av. J.-C.","44 av. J.-C."]},
+    {q:"Cléopâtre était ?",a:"Reine d'Égypte",c:["Reine d'Égypte","Impératrice romaine","Reine de Nubie","Princesse grecque"]},
+    {q:"Bataille de Waterloo ?",a:"1815",c:["1815","1812","1810","1820"]},
+    {q:"Civilisation des pyramides de Gizeh ?",a:"Égyptiens anciens",c:["Égyptiens anciens","Mésopotamiens","Grecs","Romains"]},
+    {q:"Début de la 2ème Guerre Mondiale ?",a:"1939",c:["1939","1938","1940","1941"]},
+    {q:"Commandant allié du D-Day ?",a:"Eisenhower",c:["Eisenhower","MacArthur","Patton","Montgomery"]},
+    {q:"Premier homme dans l'espace ?",a:"Youri Gagarine",c:["Youri Gagarine","Neil Armstrong","Buzz Aldrin","Alan Shepard"]},
+    {q:"Fin de l'apartheid en Afrique du Sud ?",a:"1994",c:["1994","1990","1991","1996"]},
+    {q:"Roi français surnommé 'Le Roi Soleil' ?",a:"Louis XIV",c:["Louis XIV","Louis XVI","François 1er","Henri IV"]},
+    {q:"Chute de l'Empire romain d'Occident ?",a:"476",c:["476","410","453","500"]},
+    {q:"Inventeur de l'imprimerie en Europe ?",a:"Gutenberg",c:["Gutenberg","Léonard de Vinci","Copernic","Machiavel"]},
+    {q:"France abolit l'esclavage définitivement ?",a:"1848",c:["1848","1789","1830","1871"]},
+    {q:"1er ministre britannique pendant la 2ème GM ?",a:"Winston Churchill",c:["Winston Churchill","Clement Attlee","Neville Chamberlain","Anthony Eden"]},
+    {q:"Guerre France-Prusse ?",a:"1870",c:["1870","1866","1878","1862"]},
+    {q:"Révolution russe ?",a:"1917",c:["1917","1905","1921","1914"]},
+  ],
+  gastro:[
+    {q:"Pays d'origine du sushi ?",a:"Japon",c:["Japon","Chine","Corée","Vietnam"]},
+    {q:"Base d'une vraie carbonara ?",a:"Œufs et pecorino",c:["Œufs et pecorino","Crème fraîche","Beurre et parmesan","Crème et parmesan"]},
+    {q:"Épice qui donne la couleur jaune au curry ?",a:"Curcuma",c:["Curcuma","Safran","Gingembre","Paprika"]},
+    {q:"Pays d'origine du couscous ?",a:"Maghreb",c:["Maghreb","Turquie","Moyen-Orient","Égypte"]},
+    {q:"Région française connue pour ses escargots ?",a:"Bourgogne",c:["Bourgogne","Normandie","Bretagne","Alsace"]},
+    {q:"Boisson nationale du Mexique ?",a:"Tequila",c:["Tequila","Mezcal","Pulque","Horchata"]},
+    {q:"Pays du 'Kimchi' ?",a:"Corée",c:["Corée","Japon","Chine","Vietnam"]},
+    {q:"Pâtisserie française très beurrée ?",a:"Croissant",c:["Croissant","Pain au chocolat","Brioche","Chausson aux pommes"]},
+    {q:"Pays d'origine du 'Pad Thaï' ?",a:"Thaïlande",c:["Thaïlande","Vietnam","Cambodge","Laos"]},
+    {q:"Fruit base du guacamole ?",a:"Avocat",c:["Avocat","Mangue","Lime","Tomate"]},
+    {q:"Herbe indispensable du pesto ?",a:"Basilic",c:["Basilic","Persil","Coriandre","Menthe"]},
+    {q:"Où a-t-on inventé le chocolat ?",a:"Mésoamérique",c:["Mésoamérique","Belgique","Suisse","France"]},
+    {q:"Fromage le plus consommé en France ?",a:"Emmental",c:["Emmental","Camembert","Brie","Comté"]},
+    {q:"Huile la plus utilisée en cuisine méditerranéenne ?",a:"Huile d'olive",c:["Huile d'olive","Huile de tournesol","Huile de colza","Huile de sésame"]},
+    {q:"Pays d'origine du Stroganoff ?",a:"Russie",c:["Russie","Pologne","Ukraine","Hongrie"]},
+    {q:"Capitale de la gastronomie française ?",a:"Lyon",c:["Lyon","Paris","Bordeaux","Strasbourg"]},
+    {q:"Quel fromage vient de Gruyères en Suisse ?",a:"Gruyère",c:["Gruyère","Emmental","Raclette","Appenzell"]},
+    {q:"Différence entre sorbet et glace ?",a:"Pas de produit laitier",c:["Pas de produit laitier","Plus sucré","Plus froid","Cuit"]},
+    {q:"Pays d'origine du pain naan ?",a:"Inde",c:["Inde","Pakistan","Afghanistan","Iran"]},
+    {q:"Quelle épice est plus chère que l'or au poids ?",a:"Safran",c:["Safran","Vanille","Truffe","Cardamome"]},
+  ],
+  tech:[
+    {q:"Co-fondateur d'Apple avec Steve Jobs ?",a:"Steve Wozniak",c:["Steve Wozniak","Bill Gates","Jeff Bezos","Elon Musk"]},
+    {q:"Signification de HTTP ?",a:"HyperText Transfer Protocol",c:["HyperText Transfer Protocol","High Tech Transfer Process","Home Text Transfer Program","Hyper Terminal Transfer Port"]},
+    {q:"Année de sortie du premier iPhone ?",a:"2007",c:["2007","2005","2009","2003"]},
+    {q:"Créateur de Python ?",a:"Guido van Rossum",c:["Guido van Rossum","James Gosling","Linus Torvalds","Brendan Eich"]},
+    {q:"Signification de AI ?",a:"Artificial Intelligence",c:["Artificial Intelligence","Automated Interface","Advanced Internet","Algorithmic Integration"]},
+    {q:"OS mobile d'Apple ?",a:"iOS",c:["iOS","Android","Windows Mobile","HarmonyOS"]},
+    {q:"Créateur du World Wide Web ?",a:"Tim Berners-Lee",c:["Tim Berners-Lee","Bill Gates","Vint Cerf","Marc Andreessen"]},
+    {q:"Maison mère de Google ?",a:"Alphabet",c:["Alphabet","Microsoft","Yahoo","Meta"]},
+    {q:"Année de fondation de Facebook ?",a:"2004",c:["2004","2003","2006","2001"]},
+    {q:"Signification de CPU ?",a:"Central Processing Unit",c:["Central Processing Unit","Computer Power Unit","Core Processing Utility","Central Program Updater"]},
+    {q:"Format d'image sans perte le plus courant ?",a:"PNG",c:["PNG","JPEG","GIF","BMP"]},
+    {q:"Fondateur de Tesla et SpaceX ?",a:"Elon Musk",c:["Elon Musk","Jeff Bezos","Richard Branson","Larry Page"]},
+    {q:"Signification de RAM ?",a:"Random Access Memory",c:["Random Access Memory","Read Access Module","Rapid Application Memory","Remote Access Module"]},
+    {q:"Réseau social qui a lancé les Stories en premier ?",a:"Snapchat",c:["Snapchat","Instagram","Facebook","Twitter"]},
+    {q:"Bits dans un octet ?",a:"8",c:["8","4","16","32"]},
+    {q:"Propriétaire de YouTube ?",a:"Google (Alphabet)",c:["Google (Alphabet)","Meta","Microsoft","Amazon"]},
+    {q:"Année du premier email ?",a:"1971",c:["1971","1965","1978","1983"]},
+    {q:"Quel langage est derrière le web front-end ?",a:"JavaScript",c:["JavaScript","Python","Java","PHP"]},
+    {q:"Quel géant a créé Windows ?",a:"Microsoft",c:["Microsoft","Apple","IBM","Intel"]},
+    {q:"Nombre de bits dans un mot de 64 bits ?",a:"64",c:["64","32","128","16"]},
+  ],
+  art:[
+    {q:"Peintre de la Joconde ?",a:"Léonard de Vinci",c:["Léonard de Vinci","Michel-Ange","Raphaël","Botticelli"]},
+    {q:"Auteur des 'Misérables' ?",a:"Victor Hugo",c:["Victor Hugo","Gustave Flaubert","Émile Zola","Alexandre Dumas"]},
+    {q:"Peintre qui a coupé son oreille ?",a:"Van Gogh",c:["Van Gogh","Gauguin","Cézanne","Seurat"]},
+    {q:"Auteur du 'Petit Prince' ?",a:"Antoine de Saint-Exupéry",c:["Antoine de Saint-Exupéry","Jules Verne","Albert Camus","Jean-Paul Sartre"]},
+    {q:"Auteur de 'L'Étranger' ?",a:"Albert Camus",c:["Albert Camus","Jean-Paul Sartre","Simone de Beauvoir","André Gide"]},
+    {q:"Roman le plus vendu de tous les temps ?",a:"Don Quichotte",c:["Don Quichotte","La Bible","Harry Potter","Le Seigneur des Anneaux"]},
+    {q:"Philosophe grec maître d'Aristote ?",a:"Platon",c:["Platon","Socrate","Pythagore","Héraclite"]},
+    {q:"Qui a peint la Chapelle Sixtine ?",a:"Michel-Ange",c:["Michel-Ange","Raphaël","Léonard de Vinci","Botticelli"]},
+    {q:"Auteur de 'Madame Bovary' ?",a:"Gustave Flaubert",c:["Gustave Flaubert","Guy de Maupassant","Honoré de Balzac","Stendhal"]},
+    {q:"Auteur de 'Crime et Châtiment' ?",a:"Dostoïevski",c:["Dostoïevski","Tolstoï","Tchékhov","Gogol"]},
+    {q:"Mouvement artistique de Monet ?",a:"Impressionnisme",c:["Impressionnisme","Cubisme","Surréalisme","Expressionnisme"]},
+    {q:"Auteur de 'Hamlet' ?",a:"Shakespeare",c:["Shakespeare","Molière","Racine","Corneille"]},
+    {q:"Musée le plus visité au monde ?",a:"Louvre",c:["Louvre","Met","British Museum","Hermitage"]},
+    {q:"Auteur de '1984' ?",a:"George Orwell",c:["George Orwell","Aldous Huxley","Ray Bradbury","Philip K. Dick"]},
+    {q:"Qui a écrit 'Le Voyage au bout de la nuit' ?",a:"Louis-Ferdinand Céline",c:["Louis-Ferdinand Céline","André Malraux","Georges Bernanos","Paul Claudel"]},
+    {q:"Peintre du 'Cri' ?",a:"Edvard Munch",c:["Edvard Munch","Gustav Klimt","Egon Schiele","Ernst Ludwig Kirchner"]},
+    {q:"Auteur du 'Comte de Monte-Cristo' ?",a:"Alexandre Dumas",c:["Alexandre Dumas","Victor Hugo","Stendhal","Honoré de Balzac"]},
+    {q:"Auteur de 'L'Odyssée' ?",a:"Homère",c:["Homère","Virgile","Hérodote","Sophocle"]},
+    {q:"Courant artistique de Salvador Dalí ?",a:"Surréalisme",c:["Surréalisme","Cubisme","Dadaïsme","Expressionnisme"]},
+    {q:"Auteur de 'Les Fleurs du Mal' ?",a:"Charles Baudelaire",c:["Charles Baudelaire","Arthur Rimbaud","Paul Verlaine","Stéphane Mallarmé"]},
+  ],
+  people:[
+    {q:"Vrai prénom de Rihanna ?",a:"Robyn",c:["Robyn","Rianna","Rachel","Rhonda"]},
+    {q:"Pays natal de Céline Dion ?",a:"Canada",c:["Canada","France","Belgique","Suisse"]},
+    {q:"Vrai nom de Jay-Z ?",a:"Shawn Carter",c:["Shawn Carter","Marshall Mathers","Curtis Jackson","Aubrey Graham"]},
+    {q:"Quelle est la famille royale britannique ?",a:"Windsor",c:["Windsor","Mountbatten","Saxe-Cobourg","Hanover"]},
+    {q:"Quel acteur a joué le plus de fois James Bond ?",a:"Roger Moore",c:["Roger Moore","Sean Connery","Daniel Craig","Pierce Brosnan"]},
+    {q:"Qui a joué dans 'Titanic' et 'The Revenant' ?",a:"Leonardo DiCaprio",c:["Leonardo DiCaprio","Brad Pitt","Tom Hanks","Matt Damon"]},
+    {q:"Nationalité d'Elon Musk d'origine ?",a:"Sud-africaine",c:["Sud-africaine","Américaine","Canadienne","Australienne"]},
+    {q:"Quel footballeur a remporté le plus de Ballons d'Or ?",a:"Lionel Messi (8)",c:["Lionel Messi (8)","Cristiano Ronaldo (5)","Michel Platini (3)","Ronaldo (2)"]},
+    {q:"Vrai nom de Vin Diesel ?",a:"Mark Sinclair",c:["Mark Sinclair","Paul Walker","Dwayne Johnson","Jason Statham"]},
+    {q:"Quel chanteur est né le 25 décembre 1954 ?",a:"Annie Lennox",c:["Annie Lennox","Ringo Starr","Jimmy Buffett","Barbara Mandrell"]},
+    {q:"Première femme à voler dans l'espace ?",a:"Valentina Terechkova",c:["Valentina Terechkova","Sally Ride","Judith Resnik","Christa McAuliffe"]},
+    {q:"Quel milliardaire a fondé Amazon ?",a:"Jeff Bezos",c:["Jeff Bezos","Elon Musk","Bill Gates","Warren Buffett"]},
+    {q:"Quel président américain a reçu le Prix Nobel de la Paix ?",a:"Barack Obama",c:["Barack Obama","Jimmy Carter","Woodrow Wilson","Theodore Roosevelt"]},
+    {q:"Vrai nom de Marilyn Monroe ?",a:"Norma Jeane Mortenson",c:["Norma Jeane Mortenson","Betty Joan Perske","Frances Gumm","Edythe Marrenner"]},
+    {q:"Nationalité de Nelson Mandela ?",a:"Sud-africaine",c:["Sud-africaine","Zimbabwéenne","Kényane","Nigériane"]},
+    {q:"Quel acteur joue Batman dans 'The Dark Knight' ?",a:"Christian Bale",c:["Christian Bale","Ben Affleck","Michael Keaton","Adam West"]},
+    {q:"Qui a peint le plafond de la Chapelle Sixtine ?",a:"Michel-Ange",c:["Michel-Ange","Raphaël","Léonard de Vinci","Botticelli"]},
+    {q:"Quel chanteur est surnommé 'The King' ?",a:"Elvis Presley",c:["Elvis Presley","Frank Sinatra","James Brown","Ray Charles"]},
+    {q:"Quelle icône de la mode a créé Chanel N°5 ?",a:"Coco Chanel",c:["Coco Chanel","Christian Dior","Yves Saint Laurent","Hubert de Givenchy"]},
+    {q:"Quel fondateur de Microsoft est philanthrope ?",a:"Bill Gates",c:["Bill Gates","Paul Allen","Steve Ballmer","Satya Nadella"]},
+  ],
+  general:[
+    {q:"Couleurs dans un arc-en-ciel ?",a:"7",c:["7","6","8","5"]},
+    {q:"Capitale de la Nouvelle-Zélande ?",a:"Wellington",c:["Wellington","Auckland","Christchurch","Hamilton"]},
+    {q:"Symbole animal de la France ?",a:"Le coq gaulois",c:["Le coq gaulois","Le lion","L'aigle","La fleur de lys"]},
+    {q:"Langue la plus parlée au monde ?",a:"Mandarin",c:["Mandarin","Anglais","Espagnol","Hindi"]},
+    {q:"Planètes dans notre système solaire ?",a:"8",c:["8","9","7","10"]},
+    {q:"Plus grand océan ?",a:"Pacifique",c:["Pacifique","Atlantique","Indien","Arctique"]},
+    {q:"Monnaie du Royaume-Uni ?",a:"Livre sterling",c:["Livre sterling","Euro","Couronne","Franc"]},
+    {q:"Nombre de continents sur Terre ?",a:"7",c:["7","6","5","8"]},
+    {q:"Plus haute tour du monde ?",a:"Burj Khalifa",c:["Burj Khalifa","Shanghai Tower","Abraj Al-Bait","Taipei 101"]},
+    {q:"Religion la plus pratiquée au monde ?",a:"Christianisme",c:["Christianisme","Islam","Hindouisme","Bouddhisme"]},
+    {q:"Révolution américaine ?",a:"1776",c:["1776","1789","1763","1812"]},
+    {q:"Notes dans une gamme musicale ?",a:"7",c:["7","5","8","12"]},
+    {q:"Colisée : dans quelle ville ?",a:"Rome",c:["Rome","Athènes","Istanbul","Carthage"]},
+    {q:"Musée du Louvre : dans quelle ville ?",a:"Paris",c:["Paris","Bruxelles","Amsterdam","Madrid"]},
+    {q:"Signification de 'UNESCO' ?",a:"United Nations Educational, Scientific and Cultural Organization",c:["United Nations Educational, Scientific and Cultural Organization","United Nations Economic and Social Council","Universal Network for Education and Culture","United Nations Environment and Science Council"]},
+    {q:"Quel pays a le plus grand nombre de langues officielles ?",a:"Zimbabwe (16)",c:["Zimbabwe (16)","Inde (22)","Afrique du Sud (11)","Bolivie (36)"]},
+    {q:"Quel animal est le symbole des États-Unis ?",a:"Aigle à tête blanche",c:["Aigle à tête blanche","Bison","Ours brun","Couguar"]},
+    {q:"Quelle est la devise de la France ?",a:"Liberté, Égalité, Fraternité",c:["Liberté, Égalité, Fraternité","Unité, Progrès, Justice","Travail, Justice, Solidarité","Paix, Force, Honneur"]},
+    {q:"Quel est le plus long mur du monde ?",a:"Grande Muraille de Chine",c:["Grande Muraille de Chine","Mur d'Hadrien","Mur de Berlin","Mur de Berlaymont"]},
+    {q:"Combien de couleurs dans le drapeau français ?",a:"3",c:["3","2","4","5"]},
+  ],
+  anime:[
+    {q:"Quel jeu a le plus vendu de copies dans l'histoire ?",a:"Minecraft",c:["Minecraft","GTA V","Tetris","Wii Sports"]},
+    {q:"Personnage principal de The Legend of Zelda ?",a:"Link",c:["Link","Zelda","Ganondorf","Epona"]},
+    {q:"Quel studio a créé Mario ?",a:"Nintendo",c:["Nintendo","Sega","Sony","Atari"]},
+    {q:"Dans quel jeu trouve-t-on 'The Witcher' Geralt ?",a:"The Witcher",c:["The Witcher","Dragon Age","Dark Souls","Skyrim"]},
+    {q:"Quel jeu se déroule dans la ville de Los Santos ?",a:"GTA V",c:["GTA V","GTA San Andreas","GTA IV","Red Dead Redemption"]},
+    {q:"Quel est le jeu de baston le plus populaire au monde ?",a:"Street Fighter",c:["Street Fighter","Mortal Kombat","Tekken","Super Smash Bros"]},
+    {q:"Dans quel jeu incarne-t-on Master Chief ?",a:"Halo",c:["Halo","Call of Duty","Battlefield","Destiny"]},
+    {q:"Quel jeu de stratégie se passe dans l'espace ?",a:"StarCraft",c:["StarCraft","Age of Empires","Civilization","Warcraft"]},
+    {q:"Quelle console a sorti Sony en 2013 ?",a:"PlayStation 4",c:["PlayStation 4","PlayStation 3","PS Vita","PlayStation 5"]},
+    {q:"Quel personnage iconic de Capcom combat des zombies ?",a:"Leon Kennedy",c:["Leon Kennedy","Chris Redfield","Jill Valentine","Claire Redfield"]},
+    {q:"Quel jeu populaire de battle royale est créé par Epic Games ?",a:"Fortnite",c:["Fortnite","PUBG","Apex Legends","Warzone"]},
+    {q:"Quel jeu Ubisoft se passe dans l'Egypte ancienne ?",a:"Assassin's Creed Origins",c:["Assassin's Creed Origins","Black Flag","Odyssey","Valhalla"]},
+    {q:"Qui est l'ennemi principal de Mario ?",a:"Bowser",c:["Bowser","Wario","Donkey Kong","Kamek"]},
+    {q:"Quel jeu populaire simule une ville ?",a:"SimCity",c:["SimCity","Cities: Skylines","The Sims","Anno"]},
+    {q:"Dans quel jeu trouve-t-on des Pokémon légendaires comme Mewtwo ?",a:"Pokémon Rouge/Bleu",c:["Pokémon Rouge/Bleu","Pokémon Or/Argent","Pokémon Rubis/Saphir","Pokémon Diamant/Perle"]},
+    {q:"Quel est le jeu le plus joué sur PC en 2023 ?",a:"Counter-Strike 2",c:["Counter-Strike 2","Valorant","League of Legends","Dota 2"]},
+    {q:"Quel studio développe 'The Elder Scrolls' ?",a:"Bethesda",c:["Bethesda","BioWare","CD Projekt RED","Rockstar"]},
+    {q:"Quelle console Nintendo peut se jouer en portable et en TV ?",a:"Nintendo Switch",c:["Nintendo Switch","Nintendo DS","Game Boy Advance","Wii U"]},
+    {q:"Dans quel jeu explore-t-on une île déserte avec des animaux ?",a:"Animal Crossing",c:["Animal Crossing","Stardew Valley","Harvest Moon","My Time at Portia"]},
+    {q:"Quel jeu se passe dans la ville de Rapture sous l'océan ?",a:"BioShock",c:["BioShock","System Shock","Prey","Deus Ex"]},
+  ],
+};
+
+// ════════════════════════════════════════════════════
+// MÉMOIRE DES QUESTIONS VUES
+// ════════════════════════════════════════════════════
+function getMemory() {
+  try {
+    const raw = localStorage.getItem(MEM_KEY);
+    if(!raw) return {};
+    const mem = JSON.parse(raw);
+    // Nettoyer les entrées expirées
+    const now = Date.now();
+    const cutoff = now - MEM_DAYS * 24 * 3600 * 1000;
+    Object.keys(mem).forEach(k => { if(mem[k] < cutoff) delete mem[k]; });
+    return mem;
+  } catch(e) { return {}; }
+}
+
+function markSeen(questions) {
+  try {
+    const mem = getMemory();
+    const now = Date.now();
+    questions.forEach(q => { mem[hashQ(q.q)] = now; });
+    localStorage.setItem(MEM_KEY, JSON.stringify(mem));
+  } catch(e) {}
+}
+
+function hashQ(str) {
+  let h = 0;
+  for(let i = 0; i < str.length; i++) { h = Math.imul(31, h) + str.charCodeAt(i) | 0; }
+  return h.toString(36);
+}
+
+function resetMemory() {
+  localStorage.removeItem(MEM_KEY);
+  showToast('✅ Historique réinitialisé !');
+  updateMemInfo();
+}
+
+function updateMemInfo() {
+  const mem = getMemory();
+  const total = Object.keys(mem).length;
+  const el = document.getElementById('mem-info');
+  if(el) el.innerHTML = total > 0
+    ? `<span>${total} questions</span> mémorisées sur ${MEM_DAYS} jours — évitées à la prochaine partie`
+    : `Aucun historique — toutes les questions sont disponibles`;
+}
+
+// ════════════════════════════════════════════════════
+// OPEN TRIVIA DATABASE
+// ════════════════════════════════════════════════════
+async function fetchOTDB(categoryOtdb, amount) {
+  if(!categoryOtdb) return [];
+  try {
+    const url = `https://opentdb.com/api.php?amount=${amount}&category=${categoryOtdb}&type=multiple&encode=url3986`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if(data.response_code !== 0) return [];
+    return data.results.map(item => {
+      const correct = decodeURIComponent(item.correct_answer);
+      const wrongs = item.incorrect_answers.map(a => decodeURIComponent(a));
+      const choices = shuffleCopy([correct, ...wrongs]);
+      return {
+        q: decodeURIComponent(item.question),
+        a: correct,
+        c: choices,
+        source: 'otdb'
+      };
+    });
+  } catch(e) { return []; }
+}
+
+// ════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════
+function init() {
+  roomCode = Math.random().toString(36).substring(2,6).toUpperCase();
+  document.getElementById('rc').textContent = roomCode;
+  const playerUrl = location.origin + location.pathname.replace('amusoir-master','amusoir-player') + '?room=' + roomCode;
+  document.getElementById('rurl').textContent = playerUrl;
+  // QR Code via canvas pur (aucune dépendance)
+  makeQR(playerUrl, document.getElementById('qr-box'));
+  selCats = CATEGORIES.map(c => c.id);
+  renderCats();
+  updateMemInfo();
+  loadYTApi();
+  connectAbly();
+}
+
+function connectAbly() {
+  try {
+    const ably = new Ably.Realtime(ABLY_KEY);
+    ably.connection.on('connected', () => {
+      document.getElementById('sled').className = 'sled ok';
+      document.getElementById('stxt').textContent = 'Multijoueur actif ✓';
+      ablyChan = ably.channels.get('amusoir-' + roomCode);
+      ablyChan.subscribe('join', (msg) => onJoin(msg.data));
+      ablyChan.subscribe('buzz', (msg) => onBuzz(msg.data));
+      ablyChan.subscribe('answer', (msg) => onPlayerAnswer(msg.data));
+    });
+    ably.connection.on('disconnected', () => {
+      document.getElementById('sled').className = 'sled err';
+      document.getElementById('stxt').textContent = 'Reconnexion...';
+    });
+    ably.connection.on('failed', () => {
+      document.getElementById('sled').className = 'sled err';
+      document.getElementById('stxt').textContent = 'Erreur réseau';
+    });
+  } catch(e) {
+    document.getElementById('stxt').textContent = 'Erreur: ' + e.message;
+    document.getElementById('sled').className = 'sled err';
+  }
+}
+
+function broadcast(event, data) {
+  if(ablyChan) ablyChan.publish(event, data);
+}
+
+// ════════════════════════════════════════════════════
+// JOUEURS
+// ════════════════════════════════════════════════════
+function onJoin(data) {
+  if(!data.id||!data.name) return;
+  if(!players[data.id]) {
+    const idx = Object.keys(players).length;
+    players[data.id] = {id:data.id,name:data.name,color:COLORS[idx%COLORS.length],score:0,goodAnswers:0,totalTime:0};
+  }
+  renderPlist(); renderChips('btsc'); renderChips('qsc'); renderBGrid();
+  broadcast('state', {phase:'lobby', players:getPlayers()});
+}
+
+function onBuzz(data) {
+  if(buzzed!==null) return;
+  const pid = data.id;
+  if(!players[pid]) return;
+  buzzed = pid;
+  if(ytPlayer&&ytReady){try{ytPlayer.pauseVideo();}catch(e){}}
+  btPlaying=false; clearInterval(btTimer);
+  document.getElementById('pbtn').innerHTML='▶';
+  document.getElementById('pbtn').classList.remove('on');
+  document.getElementById('pt-name').textContent = players[pid].name;
+  document.getElementById('pt-name').style.color = players[pid].color;
+  document.getElementById('pt-modal').classList.add('open');
+  broadcast('state', {phase:'bt-buzzed', buzzer:pid, buzzerName:players[pid].name});
+}
+
+function getPlayers() {
+  return Object.values(players).map(p=>({id:p.id,name:p.name,color:p.color,score:p.score,goodAnswers:p.goodAnswers||0,totalTime:p.totalTime||0}));
+}
+
+function renderPlist() {
+  const arr = Object.values(players);
+  document.getElementById('pcnt').textContent = arr.length;
+  const el = document.getElementById('plist');
+  if(!arr.length){el.innerHTML='<div class="waiting">En attente de joueurs...</div>';return;}
+  el.innerHTML = arr.map(p=>`<div class="pentry"><div class="pdot" style="background:${p.color}"></div>${p.name}</div>`).join('');
+}
+
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function goSetup(m){mode=m;go(m==='bt'?'bt-setup':'quiz-setup');if(m==='quiz')updateMemInfo();}
+
+// ════════════════════════════════════════════════════
+// YOUTUBE
+// ════════════════════════════════════════════════════
+function loadYTApi(){const s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';document.head.appendChild(s);}
+window.onYouTubeIframeAPIReady=()=>{ytPlayer=new YT.Player('yt-player',{height:'1',width:'1',playerVars:{autoplay:0,controls:0},events:{onReady:()=>{ytReady=true;}}});};
+
+async function searchYT(){
+  const key=document.getElementById('ytkey').value.trim();
+  const q=document.getElementById('yts').value.trim();
+  if(!key){showToast('⚠️ Clé YouTube API manquante !');return;}
+  if(!q)return;
+  try{
+    const r=await fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=6&q='+encodeURIComponent(q)+'&key='+key);
+    const d=await r.json();
+    if(d.error){showToast('Erreur API: '+d.error.message);return;}
+    const drop=document.getElementById('rdrop');
+    drop.innerHTML=(d.items||[]).map(i=>`<div class="ritem" onclick="addSong('${i.id.videoId}','${esc(i.snippet.title)}','${esc(i.snippet.channelTitle)}','${i.snippet.thumbnails.default.url}')"><img src="${i.snippet.thumbnails.default.url}"><div><div class="ri-t">${i.snippet.title.substring(0,50)}</div><div class="ri-c">${i.snippet.channelTitle}</div></div></div>`).join('');
+    drop.classList.add('open');
+  }catch(e){showToast('Erreur réseau');}
+}
+function esc(s){return s.replace(/'/g,"&#39;").replace(/"/g,"&quot;");}
+function addSong(id,title,ch,thumb){
+  if(playlist.find(p=>p.id===id)){showToast('Déjà dans la playlist !');return;}
+  playlist.push({id,title,ch,thumb});
+  document.getElementById('rdrop').classList.remove('open');
+  document.getElementById('yts').value='';
+  renderPL();
+}
+function removeSong(i){playlist.splice(i,1);renderPL();}
+function renderPL(){
+  document.getElementById('plcnt').textContent=playlist.length;
+  document.getElementById('plwrap').innerHTML=playlist.map((p,i)=>`<div class="plitem"><img src="${p.thumb}"><div class="pli-inf"><div class="pli-t">${p.title.substring(0,46)}</div><div class="pli-c">${p.ch}</div></div><button class="plrm" onclick="removeSong(${i})">✕</button></div>`).join('');
+}
+
+// ════════════════════════════════════════════════════
+// BLIND TEST
+// ════════════════════════════════════════════════════
+function startBT(){
+  if(!playlist.length){showToast('Ajoute des morceaux !');return;}
+  shuffle(playlist);btRound=0;
+  Object.values(players).forEach(p=>p.score=0);
+  document.getElementById('bttot').textContent=playlist.length;
+  go('bt-game');renderChips('btsc');renderBGrid();
+  broadcast('state',{phase:'bt-start',players:getPlayers()});
+  loadBTRound();
+}
+function loadBTRound(){
+  buzzed=null;btPlaying=false;clearInterval(btTimer);btTime=30;
+  document.getElementById('btr').textContent=btRound+1;
+  document.getElementById('pbtn').innerHTML='▶';document.getElementById('pbtn').classList.remove('on');
+  document.getElementById('tnum').textContent='30';document.getElementById('tfill').style.width='100%';
+  document.getElementById('revc').classList.remove('show');document.getElementById('btnext').style.display='none';
+  renderBGrid();
+  broadcast('state',{phase:'bt-wait',round:btRound});
+  if(ytPlayer&&ytReady){try{ytPlayer.stopVideo();}catch(e){}}
+}
+function togglePlay(){
+  if(!btPlaying){
+    const s=playlist[btRound];
+    if(ytPlayer&&ytReady){ytPlayer.loadVideoById(s.id);ytPlayer.playVideo();}
+    btPlaying=true;document.getElementById('pbtn').innerHTML='⏸';document.getElementById('pbtn').classList.add('on');
+    document.getElementById('mst').textContent='EN COURS...';
+    broadcast('state',{phase:'bt-playing'});
+    btTimer=setInterval(()=>{btTime--;document.getElementById('tnum').textContent=btTime;document.getElementById('tfill').style.width=(btTime/30*100)+'%';if(btTime<=0){clearInterval(btTimer);revealBT();}},1000);
+  }else{
+    if(ytPlayer&&ytReady){try{ytPlayer.pauseVideo();}catch(e){}}
+    btPlaying=false;document.getElementById('pbtn').innerHTML='▶';document.getElementById('pbtn').classList.remove('on');clearInterval(btTimer);
+    broadcast('state',{phase:'bt-paused'});
+  }
+}
+function award(ok){
+  document.getElementById('pt-modal').classList.remove('open');
+  if(ok){
+    players[buzzed].score++;
+    renderChips('btsc');renderBGrid();
+    showToast('✓ +1 pour '+players[buzzed].name+' !');
+    broadcast('state',{phase:'bt-correct',buzzer:buzzed,players:getPlayers()});
+    setTimeout(()=>revealBT(),500);
+  }else{
+    const g=document.getElementById('bgrid');
+    const btn=[...g.querySelectorAll('.bcard')].find(b=>b.dataset.id===buzzed);
+    if(btn){btn.classList.add('ko');btn.disabled=true;}
+    broadcast('state',{phase:'bt-wrong',buzzer:buzzed});
+    buzzed=null;togglePlay();
+  }
+}
+function revealBT(){
+  const s=playlist[btRound];
+  document.getElementById('reva').textContent=s.ch;document.getElementById('revt').textContent=s.title;
+  document.getElementById('revc').classList.add('show');document.getElementById('mst').textContent='RÉPONSE !';
+  document.getElementById('btnext').style.display='flex';
+  if(ytPlayer&&ytReady){try{ytPlayer.stopVideo();}catch(e){}}
+  btPlaying=false;clearInterval(btTimer);
+  broadcast('state',{phase:'bt-reveal',artist:s.ch,title:s.title});
+}
+function nextBT(){btRound++;if(btRound>=playlist.length){endGame();return;}loadBTRound();}
+function renderBGrid(){
+  document.getElementById('bgrid').innerHTML=Object.values(players).map(p=>`<div class="bcard" data-id="${p.id}" style="background:${p.color}18;border-color:${p.color};color:${p.color}"><span class="bname">${p.name}</span><span class="bpts">${p.score} pts</span></div>`).join('');
+}
+
+// ════════════════════════════════════════════════════
+// QUIZ — CHARGEMENT INTELLIGENT
+// ════════════════════════════════════════════════════
+function renderCats(){
+  selCats=[...CATEGORIES.map(c=>c.id)];
+  document.getElementById('catgrid').innerHTML=CATEGORIES.map(c=>`<div class="cpill on" data-id="${c.id}" onclick="toggleCat('${c.id}',this)">${c.label}</div>`).join('');
+}
+function toggleCat(id,el){
+  if(selCats.includes(id)){if(selCats.length<=1){showToast('Garde au moins une catégorie !');return;}selCats=selCats.filter(x=>x!==id);el.classList.remove('on');}
+  else{selCats.push(id);el.classList.add('on');}
+}
+function setQC(n,el){quizCount=n;document.querySelectorAll('.qcpill').forEach(p=>p.classList.remove('on'));el.classList.add('on');}
+
+async function startQuiz(){
+  if(!Object.keys(players).length){showToast('Attends que des joueurs rejoignent !');return;}
+  // Afficher loading
+  document.getElementById('agrid').innerHTML='<div class="loading-q" style="grid-column:1/-1;justify-content:center;padding:20px;"><div class="spinner"></div> Chargement des questions...</div>';
+  go('quiz-game');
+  document.getElementById('qtxt').textContent='Préparation du quiz...';
+  document.getElementById('qcat').textContent='';
+
+  const mem = getMemory();
+  let pool = [];
+
+  // Pour chaque catégorie sélectionnée, on charge depuis OTDB + manuel
+  for(const catId of selCats){
+    const cat = CATEGORIES.find(c=>c.id===catId);
+    if(!cat) continue;
+
+    // Questions manuelles non vues
+    const manual = (MANUAL_QUESTIONS[catId]||[]).map(q=>({...q,cat:cat.label}));
+    const freshManual = manual.filter(q=>!mem[hashQ(q.q)]);
+
+    // Questions OTDB si la catégorie en a
+    let otdbQs = [];
+    if(cat.otdb > 0){
+      const fetched = await fetchOTDB(cat.otdb, 20);
+      otdbQs = fetched.map(q=>({...q,cat:cat.label})).filter(q=>!mem[hashQ(q.q)]);
+    }
+
+    // Mélanger et ajouter
+    const combined = [...freshManual, ...otdbQs];
+    shuffle(combined);
+    pool = pool.concat(combined);
+  }
+
+  // Si pas assez de questions fraîches, on prend dans la mémoire aussi
+  if(pool.length < quizCount){
+    showToast('⚠️ Peu de questions fraîches — certaines déjà vues');
+    for(const catId of selCats){
+      const cat = CATEGORIES.find(c=>c.id===catId);
+      const manual = (MANUAL_QUESTIONS[catId]||[]).map(q=>({...q,cat:cat.label}));
+      pool = pool.concat(manual);
+    }
+  }
+
+  shuffle(pool);
+  quizQs = pool.slice(0, Math.min(quizCount, pool.length));
+  quizIdx = 0;
+  Object.values(players).forEach(p=>{p.score=0;p.goodAnswers=0;p.totalTime=0;});
+  document.getElementById('qtot').textContent = quizQs.length;
+  renderChips('qsc');
+  broadcast('state',{phase:'quiz-start',players:getPlayers()});
+  loadQ();
+}
+
+// ════════════════════════════════════════════════════
+// QUIZ — JEU
+// ════════════════════════════════════════════════════
+function loadQ(){
+  quizDone=false;quizTime=20;clearInterval(quizTimer);clearTimeout(autoNextTimer);
+  quizAnswers={};quizStartTime=Date.now();
+  document.getElementById('qn').textContent=quizIdx+1;
+  const q=quizQs[quizIdx];
+  document.getElementById('qcat').textContent=q.cat||'';
+  document.getElementById('qtxt').textContent=q.q;
+  document.getElementById('qnext').style.display='none';
+  document.getElementById('qtnum').textContent='20';
+  document.getElementById('qtfill').style.width='100%';
+  document.getElementById('auto-bar').style.display='none';
+  document.getElementById('agrid').innerHTML=q.c.map(a=>`<button class="abtn" onclick="selectAns()">${a}</button>`).join('');
+  broadcast('state',{phase:'quiz-question',idx:quizIdx,q:q.q,cat:q.cat,choices:q.c,answer:q.a});
+  quizTimer=setInterval(()=>{
+    quizTime--;
+    if(!quizDone){
+      const total=Object.keys(players).length;
+      const answered=Object.keys(quizAnswers).length;
+      document.getElementById('qtnum').textContent=answered>0?answered+'/'+total:quizTime;
+    }
+    document.getElementById('qtfill').style.width=(quizTime/20*100)+'%';
+    if(quizTime<=0){clearInterval(quizTimer);if(!quizDone)revealQ();}
+  },1000);
+}
+function selectAns(){ if(quizDone)return; revealQ(); }
+function onPlayerAnswer(data){
+  if(quizDone)return;
+  const pid=data.id;
+  if(!players[pid]||quizAnswers[pid])return;
+  const responseTime=Date.now()-quizStartTime;
+  quizAnswers[pid]={answer:data.answer,time:responseTime};
+  const q=quizQs[quizIdx];
+  if(data.answer===q.a){players[pid].score++;players[pid].goodAnswers++;players[pid].totalTime+=responseTime;}
+  renderChips('qsc');
+  if(Object.keys(quizAnswers).length>=Object.keys(players).length)revealQ();
+}
+function revealQ(){
+  quizDone=true;clearInterval(quizTimer);
+  const q=quizQs[quizIdx];
+  document.querySelectorAll('.abtn').forEach((btn,i)=>{
+    if(q.c[i]===q.a)btn.classList.add('right');
+    btn.disabled=true;
+  });
+  document.getElementById('qtnum').textContent='✓';
+  document.getElementById('qnext').style.display='flex';
+  broadcast('state',{phase:'quiz-reveal',answer:q.a,players:getPlayers()});
+  // Auto-barre
+  const bar=document.getElementById('auto-bar');
+  bar.style.display='block';
+  const fill=document.getElementById('auto-fill');
+  fill.style.transition='none';fill.style.width='100%';
+  setTimeout(()=>{fill.style.transition='width 3s linear';fill.style.width='0%';},50);
+  autoNextTimer=setTimeout(()=>nextQ(),3000);
+}
+function nextQ(){
+  clearTimeout(autoNextTimer);
+  quizIdx++;
+  if(quizIdx>=quizQs.length){endGame();return;}
+  loadQ();
+}
+
+function renderChips(id){
+  document.getElementById(id).innerHTML=Object.values(players).map(p=>`<div class="chip"><div class="cdot" style="background:${p.color}"></div>${p.name}<span class="cpts" style="color:${p.color}">${p.score}</span></div>`).join('');
+}
+
+// ════════════════════════════════════════════════════
+// FIN DE PARTIE
+// ════════════════════════════════════════════════════
+function endGame(){
+  clearInterval(btTimer);clearInterval(quizTimer);clearTimeout(autoNextTimer);
+  if(ytPlayer&&ytReady){try{ytPlayer.stopVideo();}catch(e){}}
+  // Mémoriser les questions posées
+  if(quizQs.length>0) markSeen(quizQs);
+  broadcast('state',{phase:'scoreboard',players:getPlayers()});
+  showScoreboard();
+}
+
+function showScoreboard(){
+  const arr=Object.values(players);
+  if(!arr.length){go('scoreboard');return;}
+  const medals=['🥇','🥈','🥉'];
+  const pc=['p1','p2','p3'];
+
+  const makeRows=(list,getVal,getWidth)=>list.map((p,i)=>`
+    <div class="prow ${pc[i]||''}" style="animation-delay:${i*.08}s">
+      <div class="prank">${medals[i]||i+1}</div>
+      <div class="pname" style="color:${p.color}">${p.name}</div>
+      <div class="pbw"><div class="pb" style="width:${getWidth(p,list[0])}%;background:${p.color}"></div></div>
+      <div class="ppts" style="color:${p.color}">${getVal(p)}</div>
+    </div>`).join('');
+
+  const byK=[...arr].sort((a,b)=>b.score-a.score);
+  const maxK=byK[0]?.score||1;
+  const byS=[...arr].filter(p=>p.goodAnswers>0).sort((a,b)=>(a.totalTime/a.goodAnswers)-(b.totalTime/b.goodAnswers));
+  const bestAvg=byS[0]?(byS[0].totalTime/byS[0].goodAnswers):1;
+  const maxScore=Math.max(...arr.map(p=>p.score),1);
+  const maxSpeed=Math.max(...arr.filter(p=>p.goodAnswers>0).map(p=>p.totalTime/p.goodAnswers),1);
+  const getCombo=p=>{const s=(p.score/maxScore)*50;const r=p.goodAnswers>0?(1-(p.totalTime/p.goodAnswers)/maxSpeed)*50:0;return s+r;};
+  const byC=[...arr].sort((a,b)=>getCombo(b)-getCombo(a));
+  const maxC=getCombo(byC[0])||1;
+
+  document.getElementById('podlist').innerHTML=
+    '<div class="section-title">🧠 Classement Connaissance</div>'+
+    '<div class="podlist">'+makeRows(byK,p=>p.score+' pts',(p)=>p.score/maxK*100)+'</div>'+
+    (byS.length>0?'<div class="section-title">⚡ Classement Rapidité</div>'+
+    '<div class="podlist">'+makeRows(byS,p=>((p.totalTime/p.goodAnswers)/1000).toFixed(1)+'s',(p)=>bestAvg/(p.totalTime/p.goodAnswers)*100)+'</div>':'')+
+    '<div class="section-title">🏆 Classement Combiné</div>'+
+    '<div class="podlist">'+makeRows(byC,p=>Math.round(getCombo(p))+'pts',(p)=>getCombo(p)/maxC*100)+'</div>';
+
+  go('scoreboard');
+  if(byK[0]?.score>0)confetti();
+}
+function replay(){Object.values(players).forEach(p=>{p.score=0;p.goodAnswers=0;p.totalTime=0;});go('lobby');}
+
+// ════════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════════
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+function shuffleCopy(a){const b=[...a];shuffle(b);return b;}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+function confetti(){const cols=['#f5c542','#00e5ff','#ff2d6b','#00f5a0','#ff7b00','#c77dff'];for(let i=0;i<80;i++){const el=document.createElement('div');el.className='cf';el.style.cssText='left:'+Math.random()*100+'vw;background:'+cols[Math.floor(Math.random()*cols.length)]+';width:'+(6+Math.random()*8)+'px;height:'+(6+Math.random()*8)+'px;animation-duration:'+(2+Math.random()*2)+'s;animation-delay:'+Math.random()+'s;';document.body.appendChild(el);setTimeout(()=>el.remove(),4500);}}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src * 'unsafe-inline' 'unsafe-eval' data: blob: mediastream:;"
+    X-Frame-Options = "SAMEORIGIN"
+    Access-Control-Allow-Origin = "*"

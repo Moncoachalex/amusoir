@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMUSOIR</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080810;--s1:#0f0f1a;--gold:#f5c542;--pink:#ff2d6b;--cyan:#00e5ff;--text:#eeeeff;--border:rgba(255,255,255,0.08);}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:40px;padding:24px;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,#1a0a3a 0%,var(--bg) 70%);}
+
+.logo{font-family:'Clash Display',sans-serif;font-size:clamp(64px,12vw,140px);font-weight:700;letter-spacing:-2px;
+  background:linear-gradient(135deg,var(--gold) 0%,var(--pink) 50%,var(--cyan) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 40px rgba(245,197,66,.3));text-align:center;line-height:1;}
+.sub{font-size:12px;letter-spacing:6px;color:#666688;text-transform:uppercase;text-align:center;margin-top:-12px;}
+
+.cards{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;width:100%;max-width:700px;}
+
+.card{
+  flex:1;min-width:260px;max-width:320px;
+  background:var(--s1);border:1px solid var(--border);border-radius:24px;
+  padding:32px 28px;text-align:center;
+  cursor:pointer;text-decoration:none;color:var(--text);
+  transition:.25s;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+}
+.card::before{content:'';position:absolute;inset:0;opacity:0;transition:.3s;border-radius:24px;}
+.card:hover{transform:translateY(-6px);}
+.card:active{transform:scale(.97);}
+
+.card-master::before{background:radial-gradient(ellipse at 50% 0%,rgba(255,45,107,.15) 0%,transparent 70%);}
+.card-master{border-color:rgba(255,45,107,.3);}
+.card-master:hover{border-color:var(--pink);box-shadow:0 0 40px rgba(255,45,107,.2);}
+.card-master:hover::before{opacity:1;}
+
+.card-player::before{background:radial-gradient(ellipse at 50% 0%,rgba(0,229,255,.15) 0%,transparent 70%);}
+.card-player{border-color:rgba(0,229,255,.3);}
+.card-player:hover{border-color:var(--cyan);box-shadow:0 0 40px rgba(0,229,255,.2);}
+.card-player:hover::before{opacity:1;}
+
+.card-icon{font-size:56px;line-height:1;}
+.card-title{font-family:'Clash Display',sans-serif;font-size:28px;font-weight:700;letter-spacing:1px;}
+.card-master .card-title{color:var(--pink);}
+.card-player .card-title{color:var(--cyan);}
+.card-desc{font-size:12px;color:#666688;line-height:1.7;}
+
+.card-btn{
+  margin-top:8px;padding:13px 28px;border-radius:12px;border:none;
+  font-family:'Clash Display',sans-serif;font-size:16px;font-weight:600;letter-spacing:1px;
+  cursor:pointer;width:100%;transition:.2s;
+}
+.card-master .card-btn{background:linear-gradient(135deg,var(--pink),#aa1040);color:white;box-shadow:0 0 20px rgba(255,45,107,.3);}
+.card-player .card-btn{background:linear-gradient(135deg,var(--cyan),#0099bb);color:#001a20;box-shadow:0 0 20px rgba(0,229,255,.3);}
+
+.footer{font-size:11px;color:#333355;text-align:center;letter-spacing:2px;}
+</style>
+</head>
+<body>
+
+<div>
+  <div class="logo">AMUSOIR</div>
+  <div class="sub">Blind Test · Quiz · Soirée</div>
+</div>
+
+<div class="cards">
+  <a class="card card-master" href="amusoir-master.html" target="_blank">
+    <div class="card-icon">🖥️</div>
+    <div class="card-title">MAÎTRE DU JEU</div>
+    <div class="card-desc">
+      À ouvrir sur la TV ou l'ordi.<br>
+      Gère la partie, affiche les questions<br>
+      et les scores en grand écran.
+    </div>
+    <button class="card-btn">OUVRIR →</button>
+  </a>
+
+  <a class="card card-player" href="amusoir-player.html" target="_blank">
+    <div class="card-icon">📱</div>
+    <div class="card-title">JOUEUR</div>
+    <div class="card-desc">
+      À ouvrir sur son téléphone.<br>
+      Scanne le QR code ou entre<br>
+      le code de la salle pour jouer.
+    </div>
+    <button class="card-btn">REJOINDRE →</button>
+  </a>
+</div>
+
+<div class="footer">luminous-elf-5e2cbc.netlify.app</div>
+
+</body>
+</html>
