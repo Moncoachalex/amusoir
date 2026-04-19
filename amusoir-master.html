@@ -216,7 +216,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-
   </div>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;">
     <label style="font-size:11px;color:var(--dim);">Clé YouTube API :</label>
-    <input id="ytkey" type="text" placeholder="AIzaSy..." style="background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;width:240px;">
+    <input id="ytkey" type="text" placeholder="AIzaSy..." style="background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;width:240px;" oninput="localStorage.setItem('yt_api_key',this.value)">
   </div>
 </div>
 
@@ -748,6 +748,9 @@ function init() {
   updateMemInfo();
   loadYTApi();
   connectAbly();
+  // Charger la clé YouTube mémorisée
+  const savedKey = localStorage.getItem('yt_api_key');
+  if(savedKey) document.getElementById('ytkey').value = savedKey;
 }
 
 function connectAbly() {
