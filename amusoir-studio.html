@@ -198,6 +198,12 @@ video#preview-video{max-width:100%;max-height:100%;display:none;}
           </div>
           <video id="preview-video" playsinline></video>
           <img id="preview-image" style="max-width:100%;max-height:100%;display:none;object-fit:contain;">
+          <div id="preview-audio" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:30px;">
+            <div style="font-size:64px;">🎵</div>
+            <div id="audio-filename" style="font-size:13px;color:var(--dim);text-align:center;max-width:280px;"></div>
+            <audio id="audio-el" controls style="width:280px;border-radius:8px;outline:none;"></audio>
+            <div style="font-size:11px;color:var(--dim);">Utilise les contrôles timeline ci-dessous pour poser les marqueurs</div>
+          </div>
           <div class="preview-overlay">
             <div class="preview-status" id="preview-status" style="display:none;"></div>
             <div class="preview-question" id="preview-question"></div>
@@ -276,7 +282,7 @@ video#preview-video{max-width:100%;max-height:100%;display:none;}
 </div>
 
 <div class="toast" id="toast"></div>
-<input type="file" id="file-input" accept="video/*,audio/*,image/*" style="display:none" onchange="handleFileUpload(event)">
+<input type="file" id="file-input" accept="video/*,audio/*,image/*,.mp3,.wav,.ogg,.m4a,.flac" style="display:none" onchange="handleFileUpload(event)">
 <input type="file" id="json-input" accept=".json" style="display:none" onchange="handleJSONImport(event)">
 
 <script>
@@ -574,8 +580,17 @@ function handleFileUpload(e) {
   const url = URL.createObjectURL(file);
   mediaBlobs[blobId] = url;
   const r = rounds[activeIdx];
-  r.media = { type: file.type.split('/')[0], blobId, filename: file.name, url };
+  // Détection précise du type
+  const name = file.name.toLowerCase();
+  const ext = name.split('.').pop();
+  let type = file.type.split('/')[0]; // 'video', 'audio', 'image'
+  // Forcer le type audio pour les extensions connues (certains OS ne détectent pas le MIME)
+  if(['mp3','wav','ogg','m4a','flac','aac','opus','wma'].includes(ext)) type = 'audio';
+  if(['mp4','webm','mov','avi','mkv'].includes(ext)) type = 'video';
+  if(['jpg','jpeg','png','gif','webp','svg','bmp'].includes(ext)) type = 'image';
+  r.media = { type, blobId, filename: file.name, url, mimeType: file.type };
   renderForm(); renderMediaPreview(); renderTimeline(); saveLocal();
+  showToast(`✓ ${file.name} chargé (${type})`);
   e.target.value = '';
 }
 
@@ -593,8 +608,9 @@ function renderMediaPreview() {
   const r = rounds[activeIdx];
   const vid = document.getElementById('preview-video');
   const img = document.getElementById('preview-image');
+  const aud = document.getElementById('preview-audio');
   const ph  = document.getElementById('preview-placeholder');
-  vid.style.display='none'; img.style.display='none'; ph.style.display='flex';
+  vid.style.display='none'; img.style.display='none'; aud.style.display='none'; ph.style.display='flex';
   if(!r?.media) return;
   const src = r.media.blobId ? mediaBlobs[r.media.blobId] : r.media.url;
   if(!src) return;
@@ -604,6 +620,12 @@ function renderMediaPreview() {
     vid.onloadedmetadata=()=>{ tlDuration=vid.duration; renderTimeline(); };
   } else if(r.media.type==='image') {
     img.src=src; img.style.display='block';
+  } else if(r.media.type==='audio') {
+    const audioEl = document.getElementById('audio-el');
+    audioEl.src=src;
+    document.getElementById('audio-filename').textContent = r.media.filename || 'Fichier audio';
+    aud.style.display='flex';
+    audioEl.onloadedmetadata=()=>{ tlDuration=audioEl.duration||0; renderTimeline(); };
   }
 }
 
@@ -641,35 +663,44 @@ function renderTimeline() {
   }).join('');
 }
 
+function getMediaEl() {
+  const r = rounds[activeIdx];
+  if(!r?.media) return null;
+  if(r.media.type==='video') return document.getElementById('preview-video');
+  if(r.media.type==='audio') return document.getElementById('audio-el');
+  return null;
+}
+
 function tlPlay() {
-  const vid = document.getElementById('preview-video');
+  const el = getMediaEl();
   const btn = document.getElementById('tl-play-btn');
-  if(!vid.src) return;
+  if(!el?.src) return;
   if(tlPlaying) {
-    vid.pause(); tlPlaying=false; btn.textContent='▶ Play'; btn.classList.remove('active');
+    el.pause(); tlPlaying=false; btn.textContent='▶ Play'; btn.classList.remove('active');
     clearInterval(tlInterval);
   } else {
-    vid.play(); tlPlaying=true; btn.textContent='⏸ Pause'; btn.classList.add('active');
+    el.play(); tlPlaying=true; btn.textContent='⏸ Pause'; btn.classList.add('active');
     tlInterval = setInterval(updateTLHead, 100);
   }
 }
 
 function tlStop() {
-  const vid = document.getElementById('preview-video');
+  const el = getMediaEl();
   const btn = document.getElementById('tl-play-btn');
-  vid.pause(); vid.currentTime=0; tlPlaying=false;
+  if(el){el.pause(); el.currentTime=0;}
+  tlPlaying=false;
   btn.textContent='▶ Play'; btn.classList.remove('active');
   clearInterval(tlInterval);
   updateTLHead();
 }
 
 function updateTLHead() {
-  const vid = document.getElementById('preview-video');
-  if(!vid.duration) return;
-  const pct = vid.currentTime / vid.duration * 100;
+  const el = getMediaEl();
+  if(!el?.duration) return;
+  const pct = el.currentTime / el.duration * 100;
   document.getElementById('tl-head').style.left = pct + '%';
   document.getElementById('tl-progress').style.width = pct + '%';
-  document.getElementById('tl-time').textContent = vid.currentTime.toFixed(1) + 's';
+  document.getElementById('tl-time').textContent = el.currentTime.toFixed(1) + 's';
 }
 
 let scrubbing = false;
@@ -689,7 +720,7 @@ function tlScrubMove(e) {
   const clientX = e.touches ? e.touches[0].clientX : e.clientX;
   const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
   const vid = document.getElementById('preview-video');
-  if(vid.duration) { vid.currentTime = pct * vid.duration; updateTLHead(); }
+  const _el = getMediaEl(); if(_el?.duration) { _el.currentTime = pct * _el.duration; updateTLHead(); }
 }
 function tlScrubEnd() {
   scrubbing = false;
@@ -700,8 +731,8 @@ function tlScrubEnd() {
 }
 
 function addMarkerAtCurrent() {
-  const vid = document.getElementById('preview-video');
-  const t = vid.src ? parseFloat(vid.currentTime.toFixed(1)) : 0;
+  const el = getMediaEl();
+  const t = el?.src ? parseFloat(el.currentTime.toFixed(1)) : 0;
   pendingMarkerTime = t;
   document.getElementById('marker-time').value = t;
   openModal('marker-modal');
