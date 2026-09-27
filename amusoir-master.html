@@ -264,6 +264,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-
   </div>
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px 26px;overflow-y:auto;">
     <p class="slbl">CATÉGORIES</p>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-ghost" style="font-size:11px;padding:5px 12px" onclick="selectAllCats(true)">✅ Tout sélectionner</button>
+      <button class="btn btn-ghost" style="font-size:11px;padding:5px 12px" onclick="selectAllCats(false)">❌ Tout désélectionner</button>
+    </div>
     <div class="catgrid" id="catgrid"></div>
     <p class="slbl">NOMBRE DE QUESTIONS</p>
     <div class="qcrow">
@@ -1243,8 +1247,16 @@ function renderBGrid(){
 // QUIZ
 // ══════════════════════════════════════
 function renderCats(){
-  selCats=CATEGORIES.map(c=>c.id);
-  document.getElementById('catgrid').innerHTML=CATEGORIES.map(c=>`<div class="cpill on" data-id="${c.id}" onclick="toggleCat('${c.id}',this)">${c.label}</div>`).join('');
+  selCats=[];
+  document.getElementById('catgrid').innerHTML=CATEGORIES.map(c=>`<div class="cpill" data-id="${c.id}" onclick="toggleCat('${c.id}',this)">${c.label}</div>`).join('');
+}
+
+function selectAllCats(select){
+  selCats=select?CATEGORIES.map(c=>c.id):[];
+  document.querySelectorAll('.cpill').forEach(el=>{
+    if(select)el.classList.add('on');
+    else el.classList.remove('on');
+  });
 }
 function toggleCat(id,el){
   if(selCats.includes(id)){if(selCats.length<=1){showToast('Garde au moins une catégorie !');return;}selCats=selCats.filter(x=>x!==id);el.classList.remove('on');}
@@ -1253,6 +1265,7 @@ function toggleCat(id,el){
 function setQC(n,el){quizCount=n;document.querySelectorAll('.qcpill').forEach(p=>p.classList.remove('on'));el.classList.add('on');}
 
 function startQuiz(){
+  if(!selCats.length){showToast('Sélectionne au moins une catégorie !');return;}
   go('quiz-game');
   document.getElementById('qtxt').textContent='Chargement des questions...';
   document.getElementById('agrid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;"><div class="spinner"></div></div>';
