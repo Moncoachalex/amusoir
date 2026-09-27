@@ -327,7 +327,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-
     <button class="btn btn-ghost" style="font-size:11px;padding:6px 12px" onclick="endGame()">FIN</button>
   </div>
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:0 22px;">
-    <div class="qcard"><div class="qcat" id="qcat">—</div><div class="qtxt" id="qtxt">—</div></div>
+    <div class="qcard"><div class="qcat" id="qcat">—</div><div id="qimg"></div><div class="qtxt" id="qtxt">—</div></div>
     <div class="agrid" id="agrid"></div>
     <div class="qtimer-wrap">
       <div class="tbg"><div class="tfill" id="qtfill" style="width:100%"></div></div>
@@ -378,15 +378,21 @@ const CATEGORIES = [
   {id:'art',       label:'🎨 Art & Littérature', otdb:25},
   {id:'general',   label:'🎭 Culture Générale',  otdb:9},
   {id:'jeux',      label:'🎮 Jeux Vidéo',        otdb:15},
+  {id:'series',    label:'📺 Séries & Cinéma',    otdb:0},
+  {id:'annees80',  label:'🕹️ Années 80/90',        otdb:0},
+  {id:'pubs',      label:'📢 Pubs Cultes',         otdb:0},
+  {id:'dessins',   label:'🦸 Dessins Animés',      otdb:0},
+  {id:'objets',    label:'🔧 Objets & Inventions', otdb:0},
+  {id:'defis',     label:'🧩 Défis & Pièges',      otdb:0},
 ];
 
 // ══════════════════════════════════════
-// BASE MANUELLE (fallback si API KO)
+// BASE DE QUESTIONS 100% FRANÇAISES
 // ══════════════════════════════════════
 const MANUAL = {
   musique:[
-    {q:"Qui chante 'Thriller' ?",a:"Michael Jackson",c:["Michael Jackson","Prince","Madonna","David Bowie"]},
-    {q:"Groupe de 'Bohemian Rhapsody' ?",a:"Queen",c:["Queen","The Beatles","Led Zeppelin","Rolling Stones"]},
+    {q:"Quel artiste a sorti 'Thriller' en 1982 ?",a:"Michael Jackson",c:["Michael Jackson","Prince","Madonna","David Bowie"]},
+    {q:"Groupe derrière 'Bohemian Rhapsody' ?",a:"Queen",c:["Queen","The Beatles","Led Zeppelin","Rolling Stones"]},
     {q:"Vrai nom de Lady Gaga ?",a:"Stefani Germanotta",c:["Stefani Germanotta","Alecia Moore","Robyn Fenty","Amethyst Kelly"]},
     {q:"Vrai nom d'Eminem ?",a:"Marshall Mathers",c:["Marshall Mathers","Robert Van Winkle","Curtis Jackson","Shawn Carter"]},
     {q:"Qui chante 'Rolling in the Deep' ?",a:"Adele",c:["Adele","Beyoncé","Rihanna","Amy Winehouse"]},
@@ -400,6 +406,21 @@ const MANUAL = {
     {q:"Quel chanteur est surnommé 'The King' ?",a:"Elvis Presley",c:["Elvis Presley","Frank Sinatra","James Brown","Ray Charles"]},
     {q:"Groupe de 'Smells Like Teen Spirit' ?",a:"Nirvana",c:["Nirvana","Pearl Jam","Soundgarden","Alice in Chains"]},
     {q:"Combien de membres dans BTS ?",a:"7",c:["7","5","6","4"]},
+    {q:"Qui chante 'Starboy' ?",a:"The Weeknd",c:["The Weeknd","Drake","Post Malone","Travis Scott"]},
+    {q:"Quel groupe chante 'Wonderwall' ?",a:"Oasis",c:["Oasis","Blur","Pulp","Radiohead"]},
+    {q:"Vrai prénom de Rihanna ?",a:"Robyn",c:["Robyn","Rianna","Rachel","Rhonda"]},
+    {q:"Quel groupe a sorti 'Back in Black' ?",a:"AC/DC",c:["AC/DC","Metallica","Iron Maiden","Black Sabbath"]},
+    {q:"Qui interprète 'Shallow' avec Lady Gaga ?",a:"Bradley Cooper",c:["Bradley Cooper","Justin Timberlake","Harry Styles","Adam Driver"]},
+    {q:"Quel chanteur français a sorti 'La Javanaise' ?",a:"Serge Gainsbourg",c:["Serge Gainsbourg","Jacques Brel","Georges Brassens","Charles Aznavour"]},
+    {q:"Quel rappeur s'appelle Aubrey Drake Graham ?",a:"Drake",c:["Drake","Kanye West","Jay-Z","Travis Scott"]},
+    {q:"Qui chante 'Blinding Lights' ?",a:"The Weeknd",c:["The Weeknd","Bruno Mars","Harry Styles","Justin Bieber"]},
+    {q:"Quel groupe a sorti 'Stairway to Heaven' ?",a:"Led Zeppelin",c:["Led Zeppelin","Deep Purple","Black Sabbath","The Who"]},
+    {q:"Quel instrument joue Yo-Yo Ma ?",a:"Violoncelle",c:["Violoncelle","Violon","Alto","Contrebasse"]},
+    {q:"Quel artiste a vendu le plus d'albums de tous les temps ?",a:"Michael Jackson",c:["Michael Jackson","Elvis Presley","The Beatles","Madonna"]},
+    {q:"Dans quel pays est né Bob Marley ?",a:"Jamaïque",c:["Jamaïque","Haïti","Trinidad","Barbade"]},
+    {q:"Quel groupe britannique a sorti 'Creep' ?",a:"Radiohead",c:["Radiohead","Oasis","Blur","Coldplay"]},
+    {q:"Qui a chanté 'My Way' en français ?",a:"Claude François",c:["Claude François","Jacques Brel","Serge Gainsbourg","Michel Sardou"]},
+    {q:"Quel artiste est derrière l'album 'Purple Rain' ?",a:"Prince",c:["Prince","Michael Jackson","David Bowie","Stevie Wonder"]},
   ],
   cinema:[
     {q:"Réalisateur d''Inception' ?",a:"Christopher Nolan",c:["Christopher Nolan","James Cameron","Spielberg","Ridley Scott"]},
@@ -414,13 +435,29 @@ const MANUAL = {
     {q:"Dans 'Matrix', quelle pilule prend Neo ?",a:"La rouge",c:["La rouge","La bleue","La verte","La jaune"]},
     {q:"Compositeur des musiques de Spielberg ?",a:"John Williams",c:["John Williams","Hans Zimmer","Ennio Morricone","Bernard Herrmann"]},
     {q:"Film de Kubrick dans un hôtel isolé ?",a:"Shining",c:["Shining","Eyes Wide Shut","Barry Lyndon","Full Metal Jacket"]},
-    {q:"Qui joue Hannibal Lecter ?",a:"Anthony Hopkins",c:["Anthony Hopkins","Brian Cox","Mads Mikkelsen","Ralph Fiennes"]},
-    {q:"Vrai nom de Marilyn Monroe ?",a:"Norma Jeane Mortenson",c:["Norma Jeane Mortenson","Betty Joan Perske","Frances Gumm","Edythe Marrenner"]},
+    {q:"Qui joue Hannibal Lecter dans 'Le Silence des Agneaux' ?",a:"Anthony Hopkins",c:["Anthony Hopkins","Brian Cox","Mads Mikkelsen","Ralph Fiennes"]},
+    {q:"Quel film a lancé la saga James Bond en 1962 ?",a:"James Bond contre Dr. No",c:["James Bond contre Dr. No","Goldfinger","Thunderball","On Her Majesty's Secret Service"]},
+    {q:"Qui réalise 'Pulp Fiction' ?",a:"Quentin Tarantino",c:["Quentin Tarantino","Martin Scorsese","Coen Brothers","David Fincher"]},
+    {q:"Quel acteur joue Jack Dawson dans Titanic ?",a:"Leonardo DiCaprio",c:["Leonardo DiCaprio","Brad Pitt","Johnny Depp","Tom Cruise"]},
+    {q:"Dans quel film voit-on la scène de la douche mythique ?",a:"Psychose",c:["Psychose","Vertigo","La Mort aux trousses","Les Oiseaux"]},
+    {q:"Quel film d'animation Disney met en scène Simba ?",a:"Le Roi Lion",c:["Le Roi Lion","Bambi","Jungle Book","Tarzan"]},
+    {q:"Quel acteur joue Batman dans 'The Dark Knight' ?",a:"Christian Bale",c:["Christian Bale","Ben Affleck","Michael Keaton","Adam West"]},
+    {q:"Qui réalise 'Il faut sauver le soldat Ryan' ?",a:"Steven Spielberg",c:["Steven Spielberg","Clint Eastwood","Oliver Stone","Francis Ford Coppola"]},
+    {q:"Quel film de science-fiction met en scène HAL 9000 ?",a:"2001, l'Odyssée de l'espace",c:["2001, l'Odyssée de l'espace","Blade Runner","Alien","Metropolis"]},
+    {q:"Qui interprète le Joker dans le film de 2019 ?",a:"Joaquin Phoenix",c:["Joaquin Phoenix","Heath Ledger","Jack Nicholson","Jared Leto"]},
+    {q:"Quel réalisateur français est connu pour 'Intouchables' ?",a:"Olivier Nakache et Éric Toledano",c:["Olivier Nakache et Éric Toledano","Luc Besson","Claude Lelouch","Jean-Pierre Jeunet"]},
+    {q:"Dans quel film entend-on 'Houston, on a un problème' ?",a:"Apollo 13",c:["Apollo 13","Gravity","Interstellar","The Martian"]},
+    {q:"Qui joue Iron Man dans les films Marvel ?",a:"Robert Downey Jr.",c:["Robert Downey Jr.","Chris Pratt","Chris Hemsworth","Mark Ruffalo"]},
+    {q:"Quel film de Tim Burton met en scène Edward aux mains d'argent ?",a:"Edward aux mains d'argent",c:["Edward aux mains d'argent","Beetlejuice","Batman","Big Eyes"]},
+    {q:"Dans quel pays se déroule 'Le Seigneur des Anneaux' ?",a:"Terre du Milieu (Nouvelle-Zélande)",c:["Terre du Milieu (Nouvelle-Zélande)","Angleterre","Irlande","Écosse"]},
+    {q:"Quel film Pixar se passe à la cour des jouets ?",a:"Toy Story",c:["Toy Story","Cars","Monstres & Cie","Vice-Versa"]},
+    {q:"Qui joue le personnage de Black Widow dans Marvel ?",a:"Scarlett Johansson",c:["Scarlett Johansson","Brie Larson","Zoe Saldana","Elizabeth Olsen"]},
+    {q:"Quel film de 1994 avec Tom Hanks se passe sur un banc ?",a:"Forrest Gump",c:["Forrest Gump","Philadelphia","Cast Away","Big"]},
   ],
   geo:[
     {q:"Capitale de l'Australie ?",a:"Canberra",c:["Canberra","Sydney","Melbourne","Perth"]},
     {q:"Plus grand pays du monde ?",a:"Russie",c:["Russie","Canada","Chine","États-Unis"]},
-    {q:"Plus haute montagne ?",a:"Everest",c:["Everest","K2","Aconcagua","Mont Blanc"]},
+    {q:"Plus haute montagne du monde ?",a:"Everest",c:["Everest","K2","Aconcagua","Mont Blanc"]},
     {q:"Fleuve du Caire ?",a:"Le Nil",c:["Le Nil","Le Congo","Le Zambèze","Le Niger"]},
     {q:"Détroit entre Espagne et Maroc ?",a:"Gibraltar",c:["Gibraltar","Bosphore","Malacca","Béring"]},
     {q:"Capitale du Japon ?",a:"Tokyo",c:["Tokyo","Osaka","Kyoto","Hiroshima"]},
@@ -430,24 +467,59 @@ const MANUAL = {
     {q:"Pays d'Angkor Wat ?",a:"Cambodge",c:["Cambodge","Thaïlande","Vietnam","Myanmar"]},
     {q:"Ville sur deux continents ?",a:"Istanbul",c:["Istanbul","Moscou","Athènes","Budapest"]},
     {q:"Plus grand océan ?",a:"Pacifique",c:["Pacifique","Atlantique","Indien","Arctique"]},
-    {q:"Pays le plus peuplé du monde en 2024 ?",a:"Inde",c:["Inde","Chine","États-Unis","Indonésie"]},
+    {q:"Pays le plus peuplé du monde ?",a:"Inde",c:["Inde","Chine","États-Unis","Indonésie"]},
+    {q:"Quelle ville est la capitale de l'Argentine ?",a:"Buenos Aires",c:["Buenos Aires","Montevideo","Santiago","Lima"]},
+    {q:"Dans quel pays se trouve la Tour de Pise ?",a:"Italie",c:["Italie","Espagne","Portugal","Grèce"]},
+    {q:"Quel est le plus long fleuve d'Europe ?",a:"La Volga",c:["La Volga","Le Danube","Le Rhin","Le Rhône"]},
+    {q:"Quelle mer sépare l'Europe de l'Afrique du Nord ?",a:"Mer Méditerranée",c:["Mer Méditerranée","Mer Rouge","Mer Noire","Mer Caspienne"]},
+    {q:"Dans quel pays se trouve Machu Picchu ?",a:"Pérou",c:["Pérou","Bolivie","Colombie","Équateur"]},
+    {q:"Quelle est la capitale du Canada ?",a:"Ottawa",c:["Ottawa","Toronto","Montréal","Vancouver"]},
+    {q:"Quel est le plus grand pays d'Afrique ?",a:"Algérie",c:["Algérie","Soudan","République Démocratique du Congo","Libye"]},
+    {q:"Dans quel pays se trouve le Kilimandjaro ?",a:"Tanzanie",c:["Tanzanie","Kenya","Éthiopie","Rwanda"]},
+    {q:"Quelle est la monnaie du Japon ?",a:"Yen",c:["Yen","Yuan","Won","Baht"]},
+    {q:"Quel pays possède la plus grande forêt tropicale ?",a:"Brésil",c:["Brésil","République du Congo","Indonésie","Pérou"]},
+    {q:"Dans quel pays se trouve Petra, la cité rose ?",a:"Jordanie",c:["Jordanie","Israël","Arabie Saoudite","Égypte"]},
+    {q:"Quelle est la capitale de l'Afrique du Sud ?",a:"Pretoria",c:["Pretoria","Johannesburg","Le Cap","Durban"]},
+    {q:"Quel est le plus petit continent ?",a:"Océanie",c:["Océanie","Europe","Antarctique","Amérique du Sud"]},
+    {q:"Dans quel pays se trouve le Taj Mahal ?",a:"Inde",c:["Inde","Pakistan","Bangladesh","Népal"]},
+    {q:"Quelle est la capitale de l'Australie ?",a:"Canberra",c:["Canberra","Sydney","Melbourne","Brisbane"]},
+    {q:"Quel est le plus long mur du monde ?",a:"Grande Muraille de Chine",c:["Grande Muraille de Chine","Mur d'Hadrien","Mur de Berlin","Muraille de Troie"]},
+    {q:"Dans quel pays se trouvent les pyramides de Gizeh ?",a:"Égypte",c:["Égypte","Soudan","Libye","Maroc"]},
   ],
   sport:[
     {q:"Pays hôte Coupe du Monde 2022 ?",a:"Qatar",c:["Qatar","Arabie Saoudite","Russie","Brésil"]},
-    {q:"Pays le plus titré en Coupe du Monde ?",a:"Brésil (5)",c:["Brésil (5)","Allemagne (4)","Italie (4)","Argentine (3)"]},
-    {q:"Record 100m : 9s58 ?",a:"Usain Bolt",c:["Usain Bolt","Asafa Powell","Tyson Gay","Justin Gatlin"]},
-    {q:"Club le plus de Ligues des Champions ?",a:"Real Madrid",c:["Real Madrid","FC Barcelone","Liverpool","Bayern Munich"]},
-    {q:"23 médailles or olympiques ?",a:"Michael Phelps",c:["Michael Phelps","Ian Thorpe","Mark Spitz","Caeleb Dressel"]},
+    {q:"Pays le plus titré en Coupe du Monde ?",a:"Brésil (5 titres)",c:["Brésil (5 titres)","Allemagne (4 titres)","Italie (4 titres)","Argentine (3 titres)"]},
+    {q:"Record du 100m : 9s58 ?",a:"Usain Bolt",c:["Usain Bolt","Asafa Powell","Tyson Gay","Justin Gatlin"]},
+    {q:"Club avec le plus de Ligues des Champions ?",a:"Real Madrid",c:["Real Madrid","FC Barcelone","Liverpool","Bayern Munich"]},
+    {q:"23 médailles d'or olympiques ?",a:"Michael Phelps",c:["Michael Phelps","Ian Thorpe","Mark Spitz","Caeleb Dressel"]},
     {q:"Sport de LeBron James ?",a:"Basketball",c:["Basketball","Football","Baseball","Hockey"]},
-    {q:"Joueurs dans une équipe rugby à XV ?",a:"15",c:["15","13","11","14"]},
-    {q:"Vainqueur Coupe du Monde 2018 ?",a:"France",c:["France","Croatie","Belgique","Angleterre"]},
+    {q:"Joueurs dans une équipe de rugby à XV ?",a:"15",c:["15","13","11","14"]},
+    {q:"Vainqueur de la Coupe du Monde 2018 ?",a:"France",c:["France","Croatie","Belgique","Angleterre"]},
     {q:"JO d'été 2024 : quelle ville ?",a:"Paris",c:["Paris","Los Angeles","Brisbane","Tokyo"]},
-    {q:"Nageur français médaillé or JO 2024 ?",a:"Léon Marchand",c:["Léon Marchand","Florent Manaudou","Yannick Agnel","Camille Lacourt"]},
-    {q:"Points d'un essai au rugby ?",a:"5",c:["5","3","4","6"]},
-    {q:"CR7 c'est qui ?",a:"Cristiano Ronaldo",c:["Cristiano Ronaldo","Carlos Ramos","César Rodríguez","Cláudio Renan"]},
+    {q:"Nageur français médaillé d'or aux JO 2024 ?",a:"Léon Marchand",c:["Léon Marchand","Florent Manaudou","Yannick Agnel","Camille Lacourt"]},
+    {q:"Points d'un essai au rugby à XV ?",a:"5 points",c:["5 points","3 points","4 points","6 points"]},
+    {q:"CR7 : quel joueur de foot ?",a:"Cristiano Ronaldo",c:["Cristiano Ronaldo","Carlos Ramos","César Rodríguez","Cláudio Renan"]},
+    {q:"Quel joueur de foot a remporté le plus de Ballons d'Or ?",a:"Lionel Messi (8)",c:["Lionel Messi (8)","Cristiano Ronaldo (5)","Michel Platini (3)","Ronaldo Nazário (2)"]},
+    {q:"Quel pays a inventé le judo ?",a:"Japon",c:["Japon","Chine","Corée","Brésil"]},
+    {q:"Dans quel sport pratique-t-on le 'crawl' ?",a:"Natation",c:["Natation","Aviron","Kayak","Waterpolo"]},
+    {q:"Combien de sets pour gagner à Wimbledon chez les hommes ?",a:"3 sets gagnants",c:["3 sets gagnants","2 sets gagnants","4 sets gagnants","5 sets gagnants"]},
+    {q:"Quel club de foot est surnommé 'Les Blaugrana' ?",a:"FC Barcelone",c:["FC Barcelone","Juventus","Inter Milan","Bayern Munich"]},
+    {q:"En quelle année la France a remporté sa première Coupe du Monde ?",a:"1998",c:["1998","2006","2010","2018"]},
+    {q:"Quel boxeur s'est battu contre Ali dans le 'Thrilla in Manila' ?",a:"Joe Frazier",c:["Joe Frazier","George Foreman","Ken Norton","Sonny Liston"]},
+    {q:"Quel est le surnom de l'équipe de rugby de Nouvelle-Zélande ?",a:"All Blacks",c:["All Blacks","Springboks","Wallabies","Lions"]},
+    {q:"Quelle distance court-on lors d'un marathon ?",a:"42,195 km",c:["42,195 km","40 km","45 km","50 km"]},
+    {q:"Quel joueur de tennis a gagné le plus de Grand Chelems ?",a:"Novak Djokovic (24)",c:["Novak Djokovic (24)","Rafael Nadal (22)","Roger Federer (20)","Pete Sampras (14)"]},
+    {q:"Dans quel sport utilise-t-on un 'volant' ?",a:"Badminton",c:["Badminton","Tennis de table","Squash","Padel"]},
+    {q:"Combien de joueurs dans une équipe de football ?",a:"11",c:["11","10","12","9"]},
+    {q:"Quel pays a organisé les JO d'été 1992 ?",a:"Espagne (Barcelone)",c:["Espagne (Barcelone)","France (Paris)","États-Unis (Atlanta)","Australie (Sydney)"]},
+    {q:"Quel est le sport national du Canada ?",a:"Hockey sur glace",c:["Hockey sur glace","Curling","Lacrosse","Basketball"]},
+    {q:"Combien de points vaut un panier à 3 points au basket ?",a:"3 points",c:["3 points","2 points","4 points","1 point"]},
+    {q:"Quelle nation a remporté le plus de médailles d'or aux JO d'été 2024 ?",a:"États-Unis",c:["États-Unis","Chine","Grande-Bretagne","France"]},
+    {q:"Quel nageur a battu le record du monde du 400m 4 nages aux JO 2024 ?",a:"Léon Marchand",c:["Léon Marchand","Caeleb Dressel","Adam Peaty","Kyle Chalmers"]},
+    {q:"Dans quel sport pratique-t-on le 'smash' ?",a:"Tennis",c:["Tennis","Volleyball","Badminton","Les deux (tennis et badminton)"]},
   ],
   science:[
-    {q:"Formule de l'eau ?",a:"H₂O",c:["H₂O","CO₂","NaCl","O₂"]},
+    {q:"Formule chimique de l'eau ?",a:"H₂O",c:["H₂O","CO₂","NaCl","O₂"]},
     {q:"Première marche sur la Lune ?",a:"1969",c:["1969","1965","1972","1971"]},
     {q:"Nombre d'os dans le corps adulte ?",a:"206",c:["206","189","214","232"]},
     {q:"Élément le plus abondant dans l'univers ?",a:"Hydrogène",c:["Hydrogène","Hélium","Oxygène","Carbone"]},
@@ -455,24 +527,60 @@ const MANUAL = {
     {q:"Découvreur de la pénicilline ?",a:"Alexander Fleming",c:["Alexander Fleming","Louis Pasteur","Marie Curie","Robert Koch"]},
     {q:"Vitesse de la lumière ?",a:"300 000 km/s",c:["300 000 km/s","150 000 km/s","450 000 km/s","200 000 km/s"]},
     {q:"Planète avec le plus de lunes ?",a:"Saturne",c:["Saturne","Jupiter","Uranus","Neptune"]},
-    {q:"Plus grand organe du corps ?",a:"La peau",c:["La peau","Le foie","Le cerveau","L'intestin"]},
+    {q:"Plus grand organe du corps humain ?",a:"La peau",c:["La peau","Le foie","Le cerveau","L'intestin"]},
     {q:"Plus rapide des animaux terrestres ?",a:"Guépard",c:["Guépard","Lion","Antilope","Autruche"]},
     {q:"Pattes d'une araignée ?",a:"8",c:["8","6","10","12"]},
-    {q:"Auteur de la théorie de la relativité ?",a:"Einstein",c:["Einstein","Newton","Bohr","Heisenberg"]},
+    {q:"Auteur de la théorie de la relativité ?",a:"Albert Einstein",c:["Albert Einstein","Isaac Newton","Niels Bohr","Werner Heisenberg"]},
+    {q:"Quel est le symbole chimique de l'or ?",a:"Au",c:["Au","Or","Ag","Fe"]},
+    {q:"Combien de chromosomes possède l'être humain ?",a:"46",c:["46","23","48","44"]},
+    {q:"Quel gaz représente 78% de l'atmosphère terrestre ?",a:"Azote",c:["Azote","Oxygène","Argon","CO₂"]},
+    {q:"Quelle planète est surnommée la 'planète rouge' ?",a:"Mars",c:["Mars","Jupiter","Mercure","Vénus"]},
+    {q:"À quelle température l'eau bout-elle à pression normale ?",a:"100°C",c:["100°C","90°C","110°C","120°C"]},
+    {q:"Combien de dents a un adulte avec les dents de sagesse ?",a:"32",c:["32","28","30","34"]},
+    {q:"Qui a découvert la radioactivité ?",a:"Henri Becquerel",c:["Henri Becquerel","Marie Curie","Pierre Curie","Ernest Rutherford"]},
+    {q:"Quel est le plus grand mammifère marin ?",a:"La baleine bleue",c:["La baleine bleue","Le cachalot","L'orque","Le requin baleine"]},
+    {q:"De quoi est principalement composé le Soleil ?",a:"Hydrogène et Hélium",c:["Hydrogène et Hélium","Oxygène et Carbone","Fer et Nickel","Azote et Argon"]},
+    {q:"Quelle est la durée d'une année lumière en kilomètres ?",a:"9 460 milliards de km",c:["9 460 milliards de km","1 milliard de km","100 milliards de km","1 billion de km"]},
+    {q:"Quel est l'organe qui produit l'insuline ?",a:"Le pancréas",c:["Le pancréas","Le foie","Le rein","La rate"]},
+    {q:"Combien de planètes dans notre système solaire ?",a:"8",c:["8","9","7","10"]},
+    {q:"Quelle est la formule chimique du sel de cuisine ?",a:"NaCl",c:["NaCl","KCl","CaCl₂","MgCl₂"]},
+    {q:"Quel scientifique a formulé les lois du mouvement ?",a:"Isaac Newton",c:["Isaac Newton","Galilée","Descartes","Archimède"]},
+    {q:"Quelle est la durée de révolution de la Terre autour du Soleil ?",a:"365,25 jours",c:["365,25 jours","365 jours","366 jours","364 jours"]},
+    {q:"Quel animal possède le plus grand cerveau par rapport à sa taille ?",a:"Le dauphin",c:["Le dauphin","Le chimpanzé","L'éléphant","Le perroquet"]},
+    {q:"Quelle est la température du noyau de la Terre ?",a:"Environ 6 000°C",c:["Environ 6 000°C","Environ 1 000°C","Environ 3 000°C","Environ 10 000°C"]},
+    {q:"Quel scientifique a découvert la structure de l'ADN ?",a:"Watson et Crick",c:["Watson et Crick","Marie Curie","Louis Pasteur","Gregor Mendel"]},
   ],
   histoire:[
     {q:"Révolution française ?",a:"1789",c:["1789","1776","1804","1815"]},
     {q:"Chute du mur de Berlin ?",a:"1989",c:["1989","1991","1985","1987"]},
-    {q:"1er président américain ?",a:"George Washington",c:["George Washington","Thomas Jefferson","Lincoln","Benjamin Franklin"]},
-    {q:"Colomb découvre l'Amérique ?",a:"1492",c:["1492","1488","1500","1506"]},
-    {q:"Fin 1ère Guerre Mondiale ?",a:"Traité de Versailles",c:["Traité de Versailles","Traité de Paris","Traité de Westphalie","Armistice de Compiègne"]},
-    {q:"Début 2ème Guerre Mondiale ?",a:"1939",c:["1939","1938","1940","1941"]},
+    {q:"1er président américain ?",a:"George Washington",c:["George Washington","Thomas Jefferson","Abraham Lincoln","Benjamin Franklin"]},
+    {q:"Christophe Colomb découvre l'Amérique ?",a:"1492",c:["1492","1488","1500","1506"]},
+    {q:"Traité de fin de la 1ère Guerre Mondiale ?",a:"Traité de Versailles",c:["Traité de Versailles","Traité de Paris","Traité de Westphalie","Armistice de Compiègne"]},
+    {q:"Début de la 2ème Guerre Mondiale ?",a:"1939",c:["1939","1938","1940","1941"]},
     {q:"Premier homme dans l'espace ?",a:"Youri Gagarine",c:["Youri Gagarine","Neil Armstrong","Buzz Aldrin","Alan Shepard"]},
-    {q:"Fin de l'apartheid ?",a:"1994",c:["1994","1990","1991","1996"]},
+    {q:"Fin de l'apartheid en Afrique du Sud ?",a:"1994",c:["1994","1990","1991","1996"]},
     {q:"Roi Soleil ?",a:"Louis XIV",c:["Louis XIV","Louis XVI","François 1er","Henri IV"]},
-    {q:"Inventeur de l'imprimerie en Europe ?",a:"Gutenberg",c:["Gutenberg","Léonard de Vinci","Copernic","Machiavel"]},
+    {q:"Inventeur de l'imprimerie en Europe ?",a:"Johannes Gutenberg",c:["Johannes Gutenberg","Léonard de Vinci","Nicolas Copernic","Machiavel"]},
     {q:"Révolution russe ?",a:"1917",c:["1917","1905","1921","1914"]},
-    {q:"1er ministre britannique pendant la 2GM ?",a:"Winston Churchill",c:["Winston Churchill","Clement Attlee","Neville Chamberlain","Anthony Eden"]},
+    {q:"1er ministre britannique pendant la 2ème GM ?",a:"Winston Churchill",c:["Winston Churchill","Clement Attlee","Neville Chamberlain","Anthony Eden"]},
+    {q:"En quelle année Napoléon est-il exilé à Sainte-Hélène ?",a:"1815",c:["1815","1812","1814","1820"]},
+    {q:"Quelle civilisation a construit les pyramides de Gizeh ?",a:"Les Égyptiens anciens",c:["Les Égyptiens anciens","Les Mésopotamiens","Les Grecs","Les Romains"]},
+    {q:"En quelle année a eu lieu la Bataille de Waterloo ?",a:"1815",c:["1815","1812","1810","1820"]},
+    {q:"Qui était Cléopâtre ?",a:"Reine d'Égypte",c:["Reine d'Égypte","Impératrice romaine","Reine de Nubie","Princesse grecque"]},
+    {q:"En quelle année France abolit-elle définitivement l'esclavage ?",a:"1848",c:["1848","1789","1830","1871"]},
+    {q:"Quel roi de France a été guillotiné en 1793 ?",a:"Louis XVI",c:["Louis XVI","Louis XV","Charles X","Louis-Philippe"]},
+    {q:"En quelle année a eu lieu le débarquement de Normandie ?",a:"1944",c:["1944","1943","1942","1945"]},
+    {q:"Quel empire avait pour capitale Constantinople ?",a:"Empire ottoman",c:["Empire ottoman","Empire byzantin","Empire romain","Empire perse"]},
+    {q:"En quelle année la France a-t-elle adopté la Déclaration des Droits de l'Homme ?",a:"1789",c:["1789","1793","1799","1815"]},
+    {q:"Quel événement a déclenché la 1ère Guerre Mondiale ?",a:"Assassinat de l'archiduc François-Ferdinand",c:["Assassinat de l'archiduc François-Ferdinand","Invasion de la Belgique","Crise marocaine","Révolution russe"]},
+    {q:"Qui a fondé l'empire mongol ?",a:"Gengis Khan",c:["Gengis Khan","Tamerlan","Kubilai Khan","Attila"]},
+    {q:"En quelle année a-t-on posé le premier câble télégraphique transatlantique ?",a:"1858",c:["1858","1876","1901","1844"]},
+    {q:"Quel pharaon a fait construire le plus grand temple d'Abou Simbel ?",a:"Ramsès II",c:["Ramsès II","Toutânkhamon","Akhenaton","Khéops"]},
+    {q:"Qui a dirigé la Révolution cubaine avec Fidel Castro ?",a:"Che Guevara",c:["Che Guevara","Raul Castro","Camilo Cienfuegos","Juan Almeida"]},
+    {q:"En quelle année a été signé l'Armistice de la 1ère Guerre Mondiale ?",a:"1918",c:["1918","1916","1917","1919"]},
+    {q:"Quel pays a été le premier à accorder le droit de vote aux femmes ?",a:"Nouvelle-Zélande (1893)",c:["Nouvelle-Zélande (1893)","Australie (1902)","Finlande (1906)","Norvège (1913)"]},
+    {q:"En quelle année a eu lieu la chute de Constantinople ?",a:"1453",c:["1453","1492","1517","1389"]},
+    {q:"Quel président américain a aboli l'esclavage ?",a:"Abraham Lincoln",c:["Abraham Lincoln","Ulysses Grant","Andrew Johnson","James Buchanan"]},
   ],
   gastro:[
     {q:"Pays d'origine du sushi ?",a:"Japon",c:["Japon","Chine","Corée","Vietnam"]},
@@ -483,9 +591,28 @@ const MANUAL = {
     {q:"Herbe indispensable du pesto ?",a:"Basilic",c:["Basilic","Persil","Coriandre","Menthe"]},
     {q:"Fruit du guacamole ?",a:"Avocat",c:["Avocat","Mangue","Lime","Tomate"]},
     {q:"Capitale gastronomique française ?",a:"Lyon",c:["Lyon","Paris","Bordeaux","Strasbourg"]},
-    {q:"Où a-t-on inventé le chocolat ?",a:"Mésoamérique",c:["Mésoamérique","Belgique","Suisse","France"]},
+    {q:"Où a-t-on inventé le chocolat ?",a:"Mésoamérique (Aztèques/Mayas)",c:["Mésoamérique (Aztèques/Mayas)","Belgique","Suisse","France"]},
     {q:"Épice la plus chère au monde ?",a:"Safran",c:["Safran","Vanille","Truffe","Cardamome"]},
     {q:"Pays d'origine du Pad Thaï ?",a:"Thaïlande",c:["Thaïlande","Vietnam","Cambodge","Laos"]},
+    {q:"Quelle région française est réputée pour ses escargots ?",a:"Bourgogne",c:["Bourgogne","Normandie","Bretagne","Alsace"]},
+    {q:"Quel fromage français est surnommé 'le roi des fromages' ?",a:"Brie de Meaux",c:["Brie de Meaux","Camembert","Comté","Roquefort"]},
+    {q:"Dans quel pays mange-t-on le 'jerk chicken' ?",a:"Jamaïque",c:["Jamaïque","Cuba","Trinidad","Barbade"]},
+    {q:"Quel est l'ingrédient principal de la bouillabaisse ?",a:"Poisson",c:["Poisson","Viande","Légumes","Fruits de mer"]},
+    {q:"D'où vient la recette de la fondue savoyarde ?",a:"Savoie (France / Suisse)",c:["Savoie (France / Suisse)","Alsace","Auvergne","Franche-Comté"]},
+    {q:"Quel pays a inventé la pizza ?",a:"Italie (Naples)",c:["Italie (Naples)","Grèce","Turquie","Égypte"]},
+    {q:"Quel vin est produit en Champagne ?",a:"Champagne",c:["Champagne","Crémant","Prosecco","Cava"]},
+    {q:"Quelle est la différence entre un sorbet et une glace ?",a:"Le sorbet ne contient pas de produit laitier",c:["Le sorbet ne contient pas de produit laitier","Le sorbet est plus sucré","La glace est plus froide","Le sorbet est cuit"]},
+    {q:"Quel est le plat national du Maroc ?",a:"Couscous",c:["Couscous","Tajine","Harira","Pastilla"]},
+    {q:"Quel fruit entre dans la composition du foie gras ?",a:"Aucun (pas de fruit)",c:["Aucun (pas de fruit)","Figue","Mangue","Pomme"]},
+    {q:"D'où vient la recette du steak tartare ?",a:"France",c:["France","Russie","Belgique","Allemagne"]},
+    {q:"Quelle huile est la plus utilisée en cuisine méditerranéenne ?",a:"Huile d'olive",c:["Huile d'olive","Huile de tournesol","Huile de colza","Huile de sésame"]},
+    {q:"Quel pays est le plus grand producteur de café au monde ?",a:"Brésil",c:["Brésil","Colombie","Éthiopie","Vietnam"]},
+    {q:"Quelle est la base du houmous ?",a:"Pois chiches",c:["Pois chiches","Lentilles","Haricots blancs","Fèves"]},
+    {q:"Dans quelle région française produit-on le Roquefort ?",a:"Aveyron",c:["Aveyron","Normandie","Auvergne","Alsace"]},
+    {q:"Quel alcool entre dans la composition d'un mojito ?",a:"Rhum",c:["Rhum","Vodka","Tequila","Gin"]},
+    {q:"Quelle est la spécialité culinaire de la ville de Bordeaux ?",a:"Canelé",c:["Canelé","Kouign-amann","Madeleine","Financier"]},
+    {q:"Dans quel pays le croissant a-t-il été inventé ?",a:"Autriche",c:["Autriche","France","Hongrie","Allemagne"]},
+    {q:"Quel poisson est utilisé pour faire le saumon fumé ?",a:"Saumon",c:["Saumon","Truite","Hareng","Maquereau"]},
   ],
   tech:[
     {q:"Co-fondateur d'Apple avec Steve Jobs ?",a:"Steve Wozniak",c:["Steve Wozniak","Bill Gates","Jeff Bezos","Elon Musk"]},
@@ -496,21 +623,60 @@ const MANUAL = {
     {q:"Créateur du World Wide Web ?",a:"Tim Berners-Lee",c:["Tim Berners-Lee","Bill Gates","Vint Cerf","Marc Andreessen"]},
     {q:"Année de fondation de Facebook ?",a:"2004",c:["2004","2003","2006","2001"]},
     {q:"Fondateur de Tesla et SpaceX ?",a:"Elon Musk",c:["Elon Musk","Jeff Bezos","Richard Branson","Larry Page"]},
-    {q:"Bits dans un octet ?",a:"8",c:["8","4","16","32"]},
+    {q:"Bits dans un octet ?",a:"8 bits",c:["8 bits","4 bits","16 bits","32 bits"]},
     {q:"Propriétaire de YouTube ?",a:"Google (Alphabet)",c:["Google (Alphabet)","Meta","Microsoft","Amazon"]},
     {q:"Réseau social ayant lancé les Stories en premier ?",a:"Snapchat",c:["Snapchat","Instagram","Facebook","Twitter"]},
+    {q:"Quel est le langage de programmation le plus utilisé en 2024 ?",a:"Python",c:["Python","JavaScript","Java","C++"]},
+    {q:"Que signifie 'CPU' ?",a:"Central Processing Unit",c:["Central Processing Unit","Computer Power Unit","Core Processing Utility","Central Program Updater"]},
+    {q:"Quel format d'image est sans perte de qualité ?",a:"PNG",c:["PNG","JPEG","GIF","BMP"]},
+    {q:"Quelle entreprise a développé le système Android ?",a:"Google",c:["Google","Samsung","Apple","Microsoft"]},
+    {q:"Que signifie 'Wi-Fi' ?",a:"Wireless Fidelity",c:["Wireless Fidelity","World Internet Framework","Wide Frequency Interface","Wireless File Transfer"]},
+    {q:"Quel est le réseau social professionnel le plus utilisé ?",a:"LinkedIn",c:["LinkedIn","Twitter","Facebook","Instagram"]},
+    {q:"Quelle entreprise a créé la console PlayStation ?",a:"Sony",c:["Sony","Nintendo","Microsoft","Sega"]},
+    {q:"Quel est le langage de base des pages web ?",a:"HTML",c:["HTML","CSS","JavaScript","PHP"]},
+    {q:"Quel géant tech a lancé le moteur de recherche Bing ?",a:"Microsoft",c:["Microsoft","Google","Yahoo","Apple"]},
+    {q:"Que signifie 'RAM' en informatique ?",a:"Random Access Memory",c:["Random Access Memory","Read Access Module","Rapid Application Memory","Remote Access Module"]},
+    {q:"Qui a fondé Amazon ?",a:"Jeff Bezos",c:["Jeff Bezos","Elon Musk","Bill Gates","Larry Page"]},
+    {q:"Quel système d'exploitation est développé par une communauté open source ?",a:"Linux",c:["Linux","Windows","macOS","Android"]},
+    {q:"Quelle entreprise a créé le processeur M1 ?",a:"Apple",c:["Apple","Intel","AMD","Qualcomm"]},
+    {q:"Combien y a-t-il de pixels dans un écran Full HD ?",a:"1920 × 1080",c:["1920 × 1080","1280 × 720","2560 × 1440","3840 × 2160"]},
+    {q:"Que signifie 'VPN' ?",a:"Virtual Private Network",c:["Virtual Private Network","Very Protected Navigator","Virtual Protocol Node","Verified Private Net"]},
+    {q:"En quelle année a été lancé le premier iPhone ?",a:"2007",c:["2007","2005","2009","2003"]},
+    {q:"Quel format de fichier est utilisé pour les présentations PowerPoint ?",a:".pptx",c:[".pptx",".docx",".xlsx",".pdf"]},
+    {q:"Quelle entreprise a développé le navigateur Chrome ?",a:"Google",c:["Google","Mozilla","Microsoft","Apple"]},
+    {q:"Quel est le nom du premier ordinateur personnel d'IBM ?",a:"IBM PC (1981)",c:["IBM PC (1981)","Apple I (1976)","Altair 8800 (1975)","TRS-80 (1977)"]},
   ],
   art:[
     {q:"Peintre de la Joconde ?",a:"Léonard de Vinci",c:["Léonard de Vinci","Michel-Ange","Raphaël","Botticelli"]},
     {q:"Auteur des 'Misérables' ?",a:"Victor Hugo",c:["Victor Hugo","Gustave Flaubert","Émile Zola","Alexandre Dumas"]},
-    {q:"Peintre qui a coupé son oreille ?",a:"Van Gogh",c:["Van Gogh","Gauguin","Cézanne","Seurat"]},
+    {q:"Peintre qui a coupé son oreille ?",a:"Vincent van Gogh",c:["Vincent van Gogh","Paul Gauguin","Paul Cézanne","Georges Seurat"]},
     {q:"Auteur du 'Petit Prince' ?",a:"Antoine de Saint-Exupéry",c:["Antoine de Saint-Exupéry","Jules Verne","Albert Camus","Jean-Paul Sartre"]},
     {q:"Auteur de '1984' ?",a:"George Orwell",c:["George Orwell","Aldous Huxley","Ray Bradbury","Philip K. Dick"]},
     {q:"Peintre du 'Cri' ?",a:"Edvard Munch",c:["Edvard Munch","Gustav Klimt","Egon Schiele","Ernst Kirchner"]},
     {q:"Auteur de 'L'Étranger' ?",a:"Albert Camus",c:["Albert Camus","Jean-Paul Sartre","Simone de Beauvoir","André Gide"]},
     {q:"Qui a peint la Chapelle Sixtine ?",a:"Michel-Ange",c:["Michel-Ange","Raphaël","Léonard de Vinci","Botticelli"]},
-    {q:"Courant de Salvador Dalí ?",a:"Surréalisme",c:["Surréalisme","Cubisme","Dadaïsme","Expressionnisme"]},
+    {q:"Courant artistique de Salvador Dalí ?",a:"Surréalisme",c:["Surréalisme","Cubisme","Dadaïsme","Expressionnisme"]},
     {q:"Auteur de 'Les Fleurs du Mal' ?",a:"Charles Baudelaire",c:["Charles Baudelaire","Arthur Rimbaud","Paul Verlaine","Stéphane Mallarmé"]},
+    {q:"Quel roman de Victor Hugo se déroule au Moyen-Âge ?",a:"Notre-Dame de Paris",c:["Notre-Dame de Paris","Les Misérables","L'Homme qui rit","Les Travailleurs de la mer"]},
+    {q:"Quel peintre est le fondateur du cubisme ?",a:"Pablo Picasso",c:["Pablo Picasso","Georges Braque","Juan Gris","Fernand Léger"]},
+    {q:"Quel écrivain français a reçu le Nobel de littérature en 1957 ?",a:"Albert Camus",c:["Albert Camus","Jean-Paul Sartre","André Gide","François Mauriac"]},
+    {q:"Quel musée parisien abrite la Joconde ?",a:"Le Louvre",c:["Le Louvre","Le Musée d'Orsay","Le Centre Pompidou","Le Musée Rodin"]},
+    {q:"Quel peintre impressionniste a créé les 'Nymphéas' ?",a:"Claude Monet",c:["Claude Monet","Pierre-Auguste Renoir","Edgar Degas","Camille Pissarro"]},
+    {q:"Quel auteur a écrit 'Le Tour du monde en 80 jours' ?",a:"Jules Verne",c:["Jules Verne","H.G. Wells","Alexandre Dumas","Gustave Flaubert"]},
+    {q:"Quel architecte a conçu le Centre Pompidou ?",a:"Renzo Piano et Richard Rogers",c:["Renzo Piano et Richard Rogers","I.M. Pei","Frank Gehry","Gustave Eiffel"]},
+    {q:"Quel roman de Gustave Flaubert a scandalisé la France en 1857 ?",a:"Madame Bovary",c:["Madame Bovary","L'Éducation sentimentale","Salammbô","Un cœur simple"]},
+    {q:"Qui a écrit 'Don Quichotte' ?",a:"Miguel de Cervantes",c:["Miguel de Cervantes","Lope de Vega","Francisco de Quevedo","Calderón de la Barca"]},
+    {q:"Quel est le mouvement artistique de Monet, Renoir et Degas ?",a:"Impressionnisme",c:["Impressionnisme","Réalisme","Romantisme","Fauvisme"]},
+    {q:"Quel auteur a écrit 'Le Rouge et le Noir' ?",a:"Stendhal",c:["Stendhal","Balzac","Flaubert","Zola"]},
+    {q:"Qui a sculpté 'Le Penseur' ?",a:"Auguste Rodin",c:["Auguste Rodin","Camille Claudel","Aristide Maillol","Antoine Bourdelle"]},
+    {q:"Quel roman de Zola dénonce les conditions des mineurs au XIXe siècle ?",a:"Germinal",c:["Germinal","L'Assommoir","Nana","Au Bonheur des Dames"]},
+    {q:"Qui a écrit 'Hamlet' ?",a:"William Shakespeare",c:["William Shakespeare","Christopher Marlowe","Ben Jonson","John Webster"]},
+    {q:"Quel peintre a créé 'La Nuit étoilée' ?",a:"Vincent van Gogh",c:["Vincent van Gogh","Paul Gauguin","Henri Rousseau","Paul Signac"]},
+    {q:"Quel auteur français du XXe siècle a refusé le Prix Nobel ?",a:"Jean-Paul Sartre",c:["Jean-Paul Sartre","Albert Camus","André Malraux","Louis Aragon"]},
+    {q:"Qui a écrit 'Le Comte de Monte-Cristo' ?",a:"Alexandre Dumas",c:["Alexandre Dumas","Victor Hugo","Stendhal","Honoré de Balzac"]},
+    {q:"Quel poète français a écrit 'Le bateau ivre' à 17 ans ?",a:"Arthur Rimbaud",c:["Arthur Rimbaud","Paul Verlaine","Stéphane Mallarmé","Charles Baudelaire"]},
+    {q:"Quel est le style architectural de la cathédrale Notre-Dame de Paris ?",a:"Gothique",c:["Gothique","Roman","Renaissance","Baroque"]},
+    {q:"Quel peintre espagnol est connu pour 'Guernica' ?",a:"Pablo Picasso",c:["Pablo Picasso","Salvador Dalí","Joan Miró","Francisco Goya"]},
   ],
   general:[
     {q:"Couleurs dans un arc-en-ciel ?",a:"7",c:["7","6","8","5"]},
@@ -524,6 +690,25 @@ const MANUAL = {
     {q:"Devise de la France ?",a:"Liberté, Égalité, Fraternité",c:["Liberté, Égalité, Fraternité","Unité, Progrès, Justice","Travail, Justice, Solidarité","Paix, Force, Honneur"]},
     {q:"Animal symbole des États-Unis ?",a:"Aigle à tête blanche",c:["Aigle à tête blanche","Bison","Ours brun","Couguar"]},
     {q:"Philosophe grec maître d'Aristote ?",a:"Platon",c:["Platon","Socrate","Pythagore","Héraclite"]},
+    {q:"Quelle est la religion la plus pratiquée au monde ?",a:"Christianisme",c:["Christianisme","Islam","Hindouisme","Bouddhisme"]},
+    {q:"Quel est le plus grand lac d'eau douce du monde ?",a:"Lac Supérieur",c:["Lac Supérieur","Lac Victoria","Lac Baïkal","Lac Huron"]},
+    {q:"Quelle est la langue officielle du Brésil ?",a:"Portugais",c:["Portugais","Espagnol","Brésilien","Français"]},
+    {q:"Quel est le pays le plus grand d'Amérique du Sud ?",a:"Brésil",c:["Brésil","Argentine","Colombie","Pérou"]},
+    {q:"Combien de continents y a-t-il sur Terre ?",a:"7",c:["7","6","5","8"]},
+    {q:"Quel est le pays avec le plus de frontières terrestres ?",a:"Chine (14 frontières)",c:["Chine (14 frontières)","Russie (14 frontières)","Brésil (10 frontières)","Allemagne (9 frontières)"]},
+    {q:"Quelle est la capitale de l'Australie ?",a:"Canberra",c:["Canberra","Sydney","Melbourne","Brisbane"]},
+    {q:"Quel est le pays le plus petit d'Afrique ?",a:"Seychelles",c:["Seychelles","São Tomé-et-Príncipe","Cap-Vert","Djibouti"]},
+    {q:"Quel est le pays le plus riche du monde par PIB par habitant ?",a:"Luxembourg",c:["Luxembourg","Suisse","Norvège","Singapour"]},
+    {q:"Quelle est la plus longue guerre de l'histoire ?",a:"Guerre de Cent Ans (116 ans)",c:["Guerre de Cent Ans (116 ans)","Guerre de Trente Ans","Guerre de Sept Ans","Guerre du Péloponnèse"]},
+    {q:"Quel est l'animal terrestre le plus lourd ?",a:"Éléphant d'Afrique",c:["Éléphant d'Afrique","Hippopotame","Girafe","Rhinocéros"]},
+    {q:"Quel est le fleuve le plus long du monde ?",a:"Le Nil",c:["Le Nil","L'Amazone","Le Mississippi","Le Yangtsé"]},
+    {q:"Combien de lettres dans l'alphabet français ?",a:"26",c:["26","24","28","25"]},
+    {q:"Quelle est la monnaie du Japon ?",a:"Yen",c:["Yen","Yuan","Won","Baht"]},
+    {q:"Quel est le prénom du père Noël en France ?",a:"Il n'a pas de prénom officiel",c:["Il n'a pas de prénom officiel","Nicolas","Noël","Père Fouettard"]},
+    {q:"Quelle est la ville la plus visitée au monde ?",a:"Paris",c:["Paris","Bangkok","Dubai","New York"]},
+    {q:"Quel est le drapeau avec une feuille d'érable ?",a:"Canada",c:["Canada","Australie","Nouvelle-Zélande","Fidji"]},
+    {q:"Quel est le pays qui a le plus de fois accueilli les JO d'été ?",a:"États-Unis (4 fois)",c:["États-Unis (4 fois)","France (3 fois)","Royaume-Uni (3 fois)","Japon (3 fois)"]},
+    {q:"Combien de pays composent l'Union Européenne ?",a:"27",c:["27","25","28","30"]},
   ],
   jeux:[
     {q:"Jeu le plus vendu de l'histoire ?",a:"Minecraft",c:["Minecraft","GTA V","Tetris","Wii Sports"]},
@@ -536,7 +721,190 @@ const MANUAL = {
     {q:"Console Nintendo portable + TV ?",a:"Nintendo Switch",c:["Nintendo Switch","Nintendo DS","Game Boy Advance","Wii U"]},
     {q:"Jeu Ubisoft en Égypte ancienne ?",a:"Assassin's Creed Origins",c:["Assassin's Creed Origins","Black Flag","Odyssey","Valhalla"]},
     {q:"Dans quel jeu explore-t-on une île avec des animaux ?",a:"Animal Crossing",c:["Animal Crossing","Stardew Valley","Harvest Moon","My Time at Portia"]},
+    {q:"Quel jeu de tir en équipe a été développé par Valve ?",a:"Counter-Strike",c:["Counter-Strike","Valorant","Overwatch","Rainbow Six"]},
+    {q:"Quel est le personnage principal de 'The Last of Us' ?",a:"Joel",c:["Joel","Ellie","Tommy","Tess"]},
+    {q:"Dans quel jeu incarne-t-on un détective dans Los Angeles dans les années 40 ?",a:"L.A. Noire",c:["L.A. Noire","Mafia","Sleeping Dogs","Heavy Rain"]},
+    {q:"Quel jeu de course Nintendo est le plus vendu de la franchise ?",a:"Mario Kart 8 Deluxe",c:["Mario Kart 8 Deluxe","Mario Kart Wii","Mario Kart DS","Mario Kart 7"]},
+    {q:"Quel studio polonais a développé 'The Witcher' ?",a:"CD Projekt RED",c:["CD Projekt RED","Techland","Bloober Team","11 bit studios"]},
+    {q:"Quel est le jeu le plus joué sur PC en 2023 ?",a:"Counter-Strike 2",c:["Counter-Strike 2","Valorant","League of Legends","Dota 2"]},
+    {q:"Dans quel jeu le personnage de 'Kratos' est-il le héros ?",a:"God of War",c:["God of War","Devil May Cry","Bayonetta","Dante's Inferno"]},
+    {q:"Quelle franchise de jeux de sport FIFA a changé de nom en 2023 ?",a:"EA Sports FC",c:["EA Sports FC","Pro Evolution Soccer","Football Manager","Konami Football"]},
+    {q:"Quel jeu a introduit le concept de 'Battle Royale' dans les FPS ?",a:"PUBG",c:["PUBG","Fortnite","H1Z1","DayZ"]},
+    {q:"Quel est le jeu le plus vendu sur Nintendo Switch ?",a:"Mario Kart 8 Deluxe",c:["Mario Kart 8 Deluxe","Animal Crossing","Zelda: Breath of the Wild","Super Smash Bros. Ultimate"]},
+    {q:"Quel personnage iconic de Capcom combat des zombies dans Raccoon City ?",a:"Leon Kennedy",c:["Leon Kennedy","Chris Redfield","Jill Valentine","Claire Redfield"]},
+    {q:"Dans quel jeu explore-t-on la ville de Rapture sous l'océan ?",a:"BioShock",c:["BioShock","System Shock","Prey","Deus Ex"]},
+    {q:"Quel jeu Naughty Dog se déroule dans une jungle ?",a:"Uncharted",c:["Uncharted","The Last of Us","Crash Bandicoot","Jak and Daxter"]},
+    {q:"Quelle couleur est le personnage Pac-Man ?",a:"Jaune",c:["Jaune","Rouge","Bleu","Vert"]},
+    {q:"Dans quel jeu joue-t-on un plombier qui sauve une princesse ?",a:"Super Mario Bros",c:["Super Mario Bros","Donkey Kong","Kirby","Mega Man"]},
+    {q:"Quel est le nom de la princesse dans la saga Zelda ?",a:"Zelda",c:["Zelda","Peach","Samus","Rosalina"]},
+    {q:"Quelle est la console la plus vendue de tous les temps ?",a:"PlayStation 2",c:["PlayStation 2","Nintendo DS","Game Boy","Wii"]},
+    {q:"Dans quel jeu incarne-t-on un agent secret qui peut se déguiser ?",a:"Hitman",c:["Hitman","Splinter Cell","Metal Gear Solid","Agent 47"]},
+    {q:"Quel jeu de stratégie en temps réel est développé par Blizzard ?",a:"StarCraft",c:["StarCraft","Age of Empires","Warcraft","Command & Conquer"]},
+    {q:"Quel est le nom du héros de la saga 'Mega Man' ?",a:"Mega Man (Rock)",c:["Mega Man (Rock)","Bass","Proto Man","Zero"]},
   ],
+  series:[
+    {q:"Dans 'Friends', quel est le métier de Ross ?",a:"Paléontologue",c:["Paléontologue","Médecin","Avocat","Chef cuisinier"]},
+    {q:"Dans quelle ville se déroule 'Stranger Things' ?",a:"Hawkins (Indiana)",c:["Hawkins (Indiana)","Springfield","Pawnee","Charming"]},
+    {q:"Qui joue Walter White dans 'Breaking Bad' ?",a:"Bryan Cranston",c:["Bryan Cranston","Aaron Paul","Dean Norris","Bob Odenkirk"]},
+    {q:"Quel est le prénom du dragon de Daenerys dans 'Game of Thrones' ?",a:"Drogon",c:["Drogon","Viserion","Rhaegal","Balerion"]},
+    {q:"Dans quelle série voit-on le fameux canapé orange dans un appartement new-yorkais ?",a:"Friends",c:["Friends","Seinfeld","How I Met Your Mother","The Big Bang Theory"]},
+    {q:"Qui est le chef des 'Sopranos' ?",a:"Tony Soprano",c:["Tony Soprano","Christopher Moltisanti","Paulie Walnuts","Junior Soprano"]},
+    {q:"Dans 'La Casa de Papel', quel est le nom du professeur ?",a:"Sergio Marquina",c:["Sergio Marquina","Andrés de Fonollosa","Álvaro Morte","Raúl Arévalo"]},
+    {q:"Quelle série Netflix se déroule dans une prison pour femmes ?",a:"Orange Is the New Black",c:["Orange Is the New Black","Wentworth","Bad Girls","Vis a Vis"]},
+    {q:"Dans 'The Office', quelle entreprise vend du papier ?",a:"Dunder Mifflin",c:["Dunder Mifflin","Sabre","Initech","Vandelay Industries"]},
+    {q:"Combien de saisons compte 'Game of Thrones' ?",a:"8",c:["8","7","9","10"]},
+    {q:"Dans 'Peaky Blinders', quel est le nom de la famille ?",a:"Shelby",c:["Shelby","Murphy","Changretta","Gray"]},
+    {q:"Qui joue Sherlock Holmes dans la série BBC ?",a:"Benedict Cumberbatch",c:["Benedict Cumberbatch","Martin Freeman","Mark Gatiss","Andrew Scott"]},
+    {q:"Dans quelle ville se déroule 'Emily in Paris' ?",a:"Paris",c:["Paris","Lyon","Marseille","Nice"]},
+    {q:"Qui est le héros de la série 'Dexter' ?",a:"Dexter Morgan",c:["Dexter Morgan","Dexter Robinson","Dexter Collins","Dexter Price"]},
+    {q:"Dans 'The Walking Dead', quel est le prénom du shérif héros ?",a:"Rick",c:["Rick","Daryl","Glenn","Shane"]},
+    {q:"Quelle série suit des lycéens riches à New York ?",a:"Gossip Girl",c:["Gossip Girl","The O.C.","Beverly Hills 90210","Pretty Little Liars"]},
+    {q:"Dans 'Squid Game', quel est le numéro du personnage principal ?",a:"456",c:["456","001","067","218"]},
+    {q:"Quelle série française suit un inspecteur de police dans le Midi ?",a:"Plus belle la vie",c:["Plus belle la vie","Engrenages","Caïn","Le Bureau des Légendes"]},
+    {q:"Dans 'Desperate Housewives', dans quelle rue habitent les personnages ?",a:"Wisteria Lane",c:["Wisteria Lane","Elm Street","Coronation Street","Ramsay Street"]},
+    {q:"Qui est le créateur de la série 'Black Mirror' ?",a:"Charlie Brooker",c:["Charlie Brooker","Ricky Gervais","Steven Moffat","Russell T Davies"]},
+    {q:"Dans quelle série voit-on les personnages de Jesse Pinkman et Saul Goodman ?",a:"Breaking Bad",c:["Breaking Bad","Better Call Saul","Ozark","Narcos"]},
+    {q:"Quel acteur joue le rôle de Jon Snow dans GOT ?",a:"Kit Harington",c:["Kit Harington","Richard Madden","Nikolaj Coster-Waldau","Iwan Rheon"]},
+    {q:"Dans 'Lupin', quel acteur joue Assane Diop ?",a:"Omar Sy",c:["Omar Sy","Tahar Rahim","Roschdy Zem","Sami Bouajila"]},
+    {q:"Quelle série Amazon suit un groupe de superhéros corrompus ?",a:"The Boys",c:["The Boys","Invincible","Jupiter's Legacy","Powers"]},
+    {q:"Dans 'Succession', quel est le nom de la famille milliardaire ?",a:"Roy",c:["Roy","Pierce","Waystar","Gerri"]},
+  ],
+  annees80:[
+    {q:"Quel film de 1985 met en scène une voiture qui voyage dans le temps ?",a:"Retour vers le futur",c:["Retour vers le futur","Christine","Tron","WarGames"]},
+    {q:"Quel groupe a sorti 'Don't Stop Believin'' en 1981 ?",a:"Journey",c:["Journey","Boston","REO Speedwagon","Foreigner"]},
+    {q:"Dans quel film des années 80 voit-on E.T. ?",a:"E.T. l'extra-terrestre (1982)",c:["E.T. l'extra-terrestre (1982)","Rencontres du troisième type","Cocoon","Batteries not included"]},
+    {q:"Quel groupe britannique chante 'Wake Me Up Before You Go-Go' ?",a:"Wham!",c:["Wham!","Duran Duran","Culture Club","Spandau Ballet"]},
+    {q:"Quelle émission de jeux télévisés avec des robots était populaire dans les années 90 ?",a:"Robot Wars",c:["Robot Wars","Battlestar Galactica","BattleBots","Junkyard Wars"]},
+    {q:"Quel personnage iconique est-ce ?",a:"Super Mario Bros (1985)",img:'mario',c:["Super Mario Bros (1985)","Pac-Man (1980)","Donkey Kong (1981)","Tetris (1984)"]},
+    {q:"Quelle actrice joue dans 'Flashdance' (1983) ?",a:"Jennifer Beals",c:["Jennifer Beals","Olivia Newton-John","Demi Moore","Jamie Lee Curtis"]},
+    {q:"Quel groupe chante 'Every Breath You Take' (1983) ?",a:"The Police",c:["The Police","Sting","U2","Simple Minds"]},
+    {q:"Dans quel film de 1984 voit-on des chasseurs de fantômes ?",a:"Ghostbusters",c:["Ghostbusters","Poltergeist","Gremlins","The Goonies"]},
+    {q:"Quel chanteur a popularisé le moonwalk dans les années 80 ?",a:"Michael Jackson",c:["Michael Jackson","Prince","David Bowie","James Brown"]},
+    {q:"Quelle console de jeux Sega a rivalisé avec la NES dans les années 80 ?",a:"Sega Master System",c:["Sega Master System","Sega Mega Drive","Sega Saturn","Sega Game Gear"]},
+    {q:"Quel film de John Hughes (1986) se passe en une seule journée d'école buissonnière ?",a:"La Folle Journée de Ferris Bueller",c:["La Folle Journée de Ferris Bueller","The Breakfast Club","Weird Science","Sixteen Candles"]},
+    {q:"Quel groupe français a eu un tube mondial avec 'Voyage Voyage' ?",a:"Desireless",c:["Desireless","Téléphone","Indochine","Étienne Daho"]},
+    {q:"Quel jouet électronique a rendu les enfants fous dans les années 80 ?",a:"Tamagotchi",c:["Tamagotchi","Furby","Etch A Sketch","Slinky"]},
+    {q:"Dans 'Beverly Hills Cop' (1984), qui joue Axel Foley ?",a:"Eddie Murphy",c:["Eddie Murphy","Nick Nolte","Mel Gibson","Bruce Willis"]},
+    {q:"Quel tube des années 90 de Snap! commence par 'I've got the power' ?",a:"The Power",c:["The Power","Rhythm Is a Dancer","Ooops Up","Mary Had a Little Boy"]},
+    {q:"Quel film de 1990 met en scène Kevin McCallister seul à la maison ?",a:"Maman, j'ai raté l'avion",c:["Maman, j'ai raté l'avion","Les Goonies","Stand by Me","Richie Rich"]},
+    {q:"Quel groupe a sorti 'Girls Just Want to Have Fun' en 1983 ?",a:"Cyndi Lauper",c:["Cyndi Lauper","Madonna","Pat Benatar","Bonnie Tyler"]},
+    {q:"Quelle émission française des années 90 mettait en compétition des équipes ?",a:"Fort Boyard",c:["Fort Boyard","Intervilles","La Chasse aux trésors","Jeux sans frontières"]},
+    {q:"Quel film d'horreur de 1984 met en scène Freddy Krueger ?",a:"Les Griffes de la Nuit",c:["Les Griffes de la Nuit","Halloween","Vendredi 13","Hellraiser"]},
+    {q:"Qui chante 'Total Eclipse of the Heart' en 1983 ?",a:"Bonnie Tyler",c:["Bonnie Tyler","Tina Turner","Pat Benatar","Kim Carnes"]},
+    {q:"Quel groupe de boys band a dominé les années 90 avec 'I Want It That Way' ?",a:"Backstreet Boys",c:["Backstreet Boys","*NSYNC","New Kids on the Block","Westlife"]},
+    {q:"Dans quel film des années 80 voit-on un alien vert dire 'E.T. phone home' ?",a:"E.T. l'extra-terrestre",c:["E.T. l'extra-terrestre","Cocoon","Enemy Mine","The Last Starfighter"]},
+    {q:"Quelle chanson de Madonna (1984) était son premier grand hit mondial ?",a:"Like a Virgin",c:["Like a Virgin","Material Girl","Papa Don't Preach","Holiday"]},
+    {q:"Quel dessin animé des années 80 mettait en scène des guerriers avec un tigre ?",a:"Il était une fois... l'Espace",c:["Il était une fois... l'Espace","Les Maîtres de l'Univers","Thundercats","Galaxy Rangers"]},
+  ],
+  pubs:[
+    {q:"Quelle marque utilise le slogan 'Just Do It' ?",a:"Nike",img:'nike',c:["Nike","Adidas","Puma","Reebok"]},
+    {q:"Quel slogan accompagne la marque L'Oréal ?",a:"Parce que je le vaux bien",img:'loreal',c:["Parce que je le vaux bien","L'essentiel est invisible","Venez comme vous êtes","Impossible n'est pas français"]},
+    {q:"Quelle marque de voiture dit 'Vorsprung durch Technik' ?",a:"Audi",c:["Audi","BMW","Mercedes","Volkswagen"]},
+    {q:"Quel fast-food dit 'Venez comme vous êtes' en France ?",a:"McDonald's",img:'mcdo',c:["McDonald's","Burger King","Quick","KFC"]},
+    {q:"Quel slogan accompagne Red Bull ?",a:"Red Bull donne des ailes",img:'redbull',c:["Red Bull donne des ailes","L'énergie de la vie","Born to perform","Unleash the beast"]},
+    {q:"Quelle marque de bière dit 'Probablement la meilleure bière du monde' ?",a:"Carlsberg",img:'carlsberg',c:["Carlsberg","Heineken","Kronenbourg","Stella Artois"]},
+    {q:"Quel slogan accompagne Apple ?",a:"Think Different",c:["Think Different","Innovation every day","The power of simplicity","Designed by Apple"]},
+    {q:"Quelle marque dit 'Impossible n'est pas Adidas' ?",a:"Adidas",c:["Adidas","Nike","Impossible Foods","Red Bull"]},
+    {q:"Quel chocolat a le slogan 'Un carré et ça repart' ?",a:"Milka",c:["Milka","Côte d'Or","Nestlé","Toblerone"]},
+    {q:"Quelle marque de yogourt dit 'Et si c'était vrai ?' avec des personnages âgés ?",a:"Danone (Actimel)",c:["Danone (Actimel)","Yoplait","Nestlé","Lactel"]},
+    {q:"Quel opérateur télécom dit 'Changer, c'est maintenant possible' ?",a:"Free",c:["Free","Orange","SFR","Bouygues Telecom"]},
+    {q:"Quelle banque dit 'La banque à qui parler' ?",a:"Crédit Agricole",c:["Crédit Agricole","BNP Paribas","Société Générale","Caisse d'Épargne"]},
+    {q:"Quelle marque de moutarde est 'Maille' ?",a:"Maille",c:["Maille","Amora","Savora","Bénédicta"]},
+    {q:"Quel concessionnaire dit 'La vie est trop courte pour conduire des voitures ennuyeuses' ?",a:"Peugeot",c:["Peugeot","Citroën","Renault","Fiat"]},
+    {q:"Quelle marque de lessive dit 'Plus blanc que blanc' ?",a:"Ariel",c:["Ariel","Skip","Le Chat","Persil"]},
+    {q:"Quel logo est constitué de 3 bandes parallèles ?",a:"Adidas",img:'adidas',c:["Adidas","Nike","Under Armour","Puma"]},
+    {q:"Quelle marque de chips dit 'Une fois qu'on a commencé, on ne peut plus s'arrêter' ?",a:"Pringles",c:["Pringles","Lay's","Chipster","Vico"]},
+    {q:"Quel chocolat dit 'Avec des noisettes entières, c'est encore meilleur' ?",a:"Ferrero Rocher",c:["Ferrero Rocher","Nutella","Kinder Bueno","Lindt"]},
+    {q:"Quelle marque automobile dit 'La créativité a toujours une longueur d'avance' ?",a:"Citroën",c:["Citroën","Renault","Fiat","Alfa Romeo"]},
+    {q:"Quel magasin de bricolage dit 'On a toujours besoin d'un petit génie' ?",a:"Mr. Bricolage",c:["Mr. Bricolage","Castorama","Leroy Merlin","Bricomarché"]},
+    {q:"Quel slogan accompagne la SNCF ?",a:"Voyagez autrement",c:["Voyagez autrement","À vous de voyager","Le voyage, c'est la vie","Prenez le large"]},
+    {q:"Quelle marque de café dit 'On reconnaît un grand café à ses arômes' ?",a:"Nespresso",c:["Nespresso","Lavazza","Carte Noire","Maxwell House"]},
+    {q:"Quelle céréale dit 'Mmm, j'adore les dimanches' dans sa pub des années 90 ?",a:"Kellogg's Frosties",c:["Kellogg's Frosties","Chocapic","Miel Pops","Lion Céréales"]},
+    {q:"Quelle marque de voiture a pour mascotte un lion ?",a:"Peugeot",img:'peugeot',c:["Peugeot","Renault","Ferrari","Lamborghini"]},
+    {q:"Quel parfum dit 'L'interdit' et est associé à Givenchy ?",a:"L'Interdit de Givenchy",c:["L'Interdit de Givenchy","Chanel N°5","Dior J'adore","Yves Saint Laurent Opium"]},
+  ],
+  dessins:[
+    {q:"Quel robot géant protège la Terre dans cette série ?",a:"Goldorak (UFO Robot Grendizer)",img:'goldorak',c:["Goldorak (UFO Robot Grendizer)","Mazinger Z","Getter Robot","Combattler V"]},
+    {q:"Qu'est-ce que cette boule mystérieuse avec des étoiles ?",a:"Dragon Ball Z",img:'dragonball',c:["Dragon Ball Z","Dragon Ball Kai","Dragon Ball Super","Dragon Ball GT"]},
+    {q:"Dans 'Les Simpsons', quel est le prénom de la voisine aux cheveux bleus ?",a:"Maude Flanders",c:["Maude Flanders","Patty Bouvier","Selma Bouvier","Agnes Skinner"]},
+    {q:"Qui est le méchant principal dans 'Inspecteur Gadget' ?",a:"Docteur Gang (Dr. Claw)",c:["Docteur Gang (Dr. Claw)","MAD Agent","Penny","Brain"]},
+    {q:"Quel est ce dessin animé culte avec cette héroïne ?",a:"Américaine",img:'candy',c:["Américaine","Japonaise","Française","Britannique"]},
+    {q:"Quel est le nom du chien dans 'Les Aristochats' ?",a:"Il n'y a pas de chien (c'est des chats)",c:["Il n'y a pas de chien (c'est des chats)","Hector","Napi","Bruno"]},
+    {q:"Dans 'Albator', quel est le nom du vaisseau spatial ?",a:"L'Arcadia",c:["L'Arcadia","Le Harlock","Le Deathshadow","Le Mazone"]},
+    {q:"Quel est le pouvoir principal de Goku dans Dragon Ball Z ?",a:"Le Kamehameha",c:["Le Kamehameha","Le Rasengan","Le Galick Gun","Le Final Flash"]},
+    {q:"Dans 'Tom et Jerry', qui est la souris ?",a:"Jerry",c:["Jerry","Tom","Spike","Nibbles"]},
+    {q:"Quel est ce dessin animé ?",a:"Les Schtroumpfs",img:'smurf',c:["Les Schtroumpfs","Les Snorky","Les Pitchouns","Les Popples"]},
+    {q:"Dans 'Sailor Moon', quel est le vrai prénom de Sailor Moon ?",a:"Bunny (Usagi en japonais)",c:["Bunny (Usagi en japonais)","Serena","Luna","Chibiusa"]},
+    {q:"Quel dessin animé met en scène des ours avec un symbole sur le ventre ?",a:"Les Bisounours",c:["Les Bisounours","Les Calinours","Les Câlinous","Les Tendours"]},
+    {q:"Dans 'Cobra', quelle est l'arme spéciale du héros ?",a:"Le Psycho-Gun",c:["Le Psycho-Gun","Le Laser-Bras","Le Plasma-Canon","Le Mega-Pistolet"]},
+    {q:"Quel personnage de dessin animé dit 'Qu'est-ce qu'on va faire ce soir Brain ?' ?",a:"Minus (Pinky)",c:["Minus (Pinky)","Brain","Fievel","Danger Mouse"]},
+    {q:"Dans quel pays se déroule 'Heidi' ?",a:"Suisse (et Allemagne)",c:["Suisse (et Allemagne)","Autriche","Bavière","Italie"]},
+    {q:"Quel dessin animé met en scène un garçon avec une boîte magique ?",a:"Capitaine Flam",c:["Capitaine Flam","Captain Future","Buck Rogers","Ulysses 31"]},
+    {q:"Dans 'Ducktales', quel est le prénom du grand-oncle milliardaire ?",a:"Balthazar Picsou",c:["Balthazar Picsou","Donald Duck","Gladstone","Riri Fifi Loulou"]},
+    {q:"Quel dessin animé japonais suit des pilotes de robots géants appelés 'Evangelion' ?",a:"Neon Genesis Evangelion",c:["Neon Genesis Evangelion","Macross","Patlabor","Escaflowne"]},
+    {q:"De quelle couleur est le bandeau de Leonardo dans cette série ?",a:"Bleu",img:'tortues',c:["Bleu","Rouge","Orange","Violet"]},
+    {q:"Quel dessin animé des années 80 mettait en scène des chats humanoïdes ?",a:"Thundercats",c:["Thundercats","Lion-O","Cat's Eye","Battle of the Planets"]},
+    {q:"Dans 'Winnie l'Ourson', quel est l'âne déprimé ?",a:"Bourriquet (Eeyore)",c:["Bourriquet (Eeyore)","Coco (Piglet)","Tigrou","Maître Hibou"]},
+    {q:"Quel dessin animé suit Marco qui cherche sa mère en Amérique du Sud ?",a:"Marco",c:["Marco","Heidi","Pollyanna","Remi"]},
+    {q:"Dans 'Ulysse 31', quelle odyssée le héros revisite-t-il dans l'espace ?",a:"L'Odyssée d'Homère",c:["L'Odyssée d'Homère","L'Énéide de Virgile","L'Iliade d'Homère","Les Argonautiques"]},
+    {q:"Quelle voix française doubla le personnage de Bugs Bunny en France ?",a:"Roger Carel",c:["Roger Carel","Claude Bertrand","Georges Aminel","Henry Djanik"]},
+    {q:"Dans 'Bioman', combien de membres compose l'équipe ?",a:"5",c:["5","4","6","3"]},
+  ],
+  objets:[
+    {q:"En quelle année le Post-it a-t-il été inventé ?",a:"1980",c:["1980","1968","1974","1985"]},
+    {q:"Qui a inventé le téléphone ?",a:"Alexander Graham Bell",c:["Alexander Graham Bell","Thomas Edison","Nikola Tesla","Guglielmo Marconi"]},
+    {q:"En quelle année a été inventé le four à micro-ondes ?",a:"1945",c:["1945","1955","1962","1970"]},
+    {q:"Quelle entreprise a inventé le Velcro ?",a:"George de Mestral (Suisse)",c:["George de Mestral (Suisse)","3M","DuPont","NASA"]},
+    {q:"Qui a inventé l'ampoule électrique ?",a:"Thomas Edison",c:["Thomas Edison","Nikola Tesla","Joseph Swan","Alessandro Volta"]},
+    {q:"En quelle année a été inventé le Lego ?",a:"1949",c:["1949","1958","1932","1965"]},
+    {q:"Quel objet du quotidien a été inventé par accident avec de la colle qui ne collait pas ?",a:"Le Post-it",c:["Le Post-it","Le Scotch","La Blu-Tack","Le Masking Tape"]},
+    {q:"Qui a inventé la machine à laver ?",a:"James King (1851)",c:["James King (1851)","William Blackstone","Alva Fisher","Miele"]},
+    {q:"Quelle invention de 1938 est devenue le stylo bille ?",a:"Invention de László Bíró",c:["Invention de László Bíró","Invention de Waterman","Invention de Parker","Invention de Reynolds"]},
+    {q:"En quelle année le CD (Compact Disc) a-t-il été commercialisé ?",a:"1982",c:["1982","1978","1985","1990"]},
+    {q:"Qui a inventé le Rubik's Cube ?",a:"Ernő Rubik (Hongrois)",c:["Ernő Rubik (Hongrois)","Terence Tao","Larry Nichols","Frank Fox"]},
+    {q:"En quelle année le premier SMS a-t-il été envoyé ?",a:"1992",c:["1992","1989","1995","1998"]},
+    {q:"Quel objet a été inventé pour relier les lacets de chaussures sans les nouer ?",a:"Le velcro",c:["Le velcro","Le scratch","La boucle","Le clip"]},
+    {q:"Qui a inventé la photographie ?",a:"Louis Daguerre",c:["Louis Daguerre","Nicéphore Niépce","William Fox Talbot","Charles Wheatstone"]},
+    {q:"En quelle année le Walkman de Sony a-t-il été lancé ?",a:"1979",c:["1979","1975","1982","1970"]},
+    {q:"Quel objet a été inventé par Narcisse Hermitte pour le bureau ?",a:"La corbeille à papier",c:["La corbeille à papier","L'agrafeuse","La perforatrice","Le classeur"]},
+    {q:"Qui a inventé la dynamite ?",a:"Alfred Nobel",c:["Alfred Nobel","Pierre-Paul Riquet","Thomas Edison","James Watt"]},
+    {q:"En quelle année le téléphone portable a-t-il été inventé ?",a:"1973 (premier appel)",c:["1973 (premier appel)","1980","1965","1985"]},
+    {q:"Quelle entreprise a inventé le Frisbee ?",a:"Wham-O",c:["Wham-O","Hasbro","Mattel","Parker Brothers"]},
+    {q:"Qui a inventé l'imprimante 3D ?",a:"Chuck Hull (1983)",c:["Chuck Hull (1983)","Hideo Kodama","Carl Deckard","Scott Crump"]},
+    {q:"En quelle année la télécommande a-t-elle été inventée ?",a:"1956 (Zenith Space Command)",c:["1956 (Zenith Space Command)","1948","1965","1972"]},
+    {q:"Quel objet de sécurité a été inventé par Nils Bohlin pour Volvo ?",a:"La ceinture de sécurité à 3 points",c:["La ceinture de sécurité à 3 points","L'airbag","Les freins ABS","Le siège auto"]},
+    {q:"Qui a inventé Internet (ARPANET) ?",a:"L'armée américaine (DARPA)",c:["L'armée américaine (DARPA)","Tim Berners-Lee","Bill Gates","Vint Cerf"]},
+    {q:"En quelle année le premier iPod est-il sorti ?",a:"2001",c:["2001","1999","2003","2005"]},
+    {q:"Quel objet français a révolutionné la cuisine en 1953 ?",a:"La cocotte-minute (SEB)",c:["La cocotte-minute (SEB)","Le mixer Moulinex","La friteuse Seb","Le robot Thermomix"]},
+  ],
+  defis:[
+    {q:"Un coq pond sur le toit d'une maison penchée, de quel côté tombe l'œuf ?",a:"Les coqs ne pondent pas",c:["Les coqs ne pondent pas","Du côté gauche","Du côté droit","Il ne tombe pas"]},
+    {q:"Si vous avez 3 pommes et que vous en prenez 2, combien en avez-vous ?",a:"2 (celles que vous avez prises)",c:["2 (celles que vous avez prises)","1","3","0"]},
+    {q:"Quelle est la devise inscrite sur les pièces de 1€ française ?",a:"Liberté Égalité Fraternité",c:["Liberté Égalité Fraternité","République Française","Euro 1","France 2002"]},
+    {q:"Un avion s'écrase exactement à la frontière entre la France et l'Espagne. Où enterre-t-on les survivants ?",a:"On n'enterre pas les survivants",c:["On n'enterre pas les survivants","En France","En Espagne","Selon leur nationalité"]},
+    {q:"Combien de mois de l'année ont 28 jours ?",a:"12 (tous les mois ont au moins 28 jours)",c:["12 (tous les mois ont au moins 28 jours)","1","2","3"]},
+    {q:"Si une horloge sonne 6 fois en 5 secondes, combien de temps met-elle pour sonner 12 fois ?",a:"11 secondes",c:["11 secondes","10 secondes","12 secondes","6 secondes"]},
+    {q:"Qu'est-ce qui est plus grand qu'un éléphant mais ne pèse rien ?",a:"Son ombre",c:["Son ombre","Le ciel","Le vide","La liberté"]},
+    {q:"Un fermier a 17 moutons. Tous sauf 9 sont morts. Combien en reste-t-il ?",a:"9",c:["9","8","17","0"]},
+    {q:"Qu'est-ce qu'un homme peut faire mais pas une femme, mais qu'une femme peut faire... mais non, oubliez ?",a:"C'est une devinette sans fin !",c:["C'est une devinette sans fin !","Se raser la barbe","Porter une cravate","Faire du sport"]},
+    {q:"Je suis léger comme une plume, mais même l'homme le plus fort ne peut me tenir plus de 5 minutes. Qui suis-je ?",a:"La respiration (l'air)",c:["La respiration (l'air)","La lumière","Un rêve","Le silence"]},
+    {q:"Quel est le mot le plus long de la langue française ?",a:"Anticonstitutionnellement",c:["Anticonstitutionnellement","Hexakosioihexekontahexaphobie","Pneumonoultramicroscopique","Constitutionnellement"]},
+    {q:"Quelle lettre est au centre de 'Paris' ?",a:"'a' (p-A-ris)",c:["'a' (p-A-ris)","'r'","'i'","'p'"]},
+    {q:"Si je double 1 centime chaque jour pendant 30 jours, combien ai-je ?",a:"Plus de 5 millions d'euros",c:["Plus de 5 millions d'euros","30 centimes","3 euros","1 000 euros"]},
+    {q:"Quelle chose a des dents mais ne peut pas mordre ?",a:"Un peigne",c:["Un peigne","Un rasoir","Un piège","Une scie"]},
+    {q:"Je peux courir mais pas marcher, j'ai une bouche mais ne parle pas, j'ai une tête mais ne pense pas. Qui suis-je ?",a:"Une rivière",c:["Une rivière","Un fleuve","La pluie","Le vent"]},
+    {q:"Combien de fois peut-on soustraire 5 de 25 ?",a:"Une fois (ensuite c'est 20)",c:["Une fois (ensuite c'est 20)","5 fois","25 fois","Infiniment"]},
+    {q:"Si vous êtes dans une course et dépassez la personne en 2ème position, quelle place êtes-vous ?",a:"2ème place",c:["2ème place","1ère place","3ème place","Dernière place"]},
+    {q:"Quelle est la différence entre une série de 0 et un zéro tout seul ?",a:"La série de 0 n'a pas de valeur, le zéro non plus !",c:["La série de 0 n'a pas de valeur, le zéro non plus !","La série vaut plus","Le zéro isolé vaut plus","Aucune différence"]},
+    {q:"Quel est le seul jour de la semaine qui contient le mot 'jeune' ?",a:"Jeudi",c:["Jeudi","Jeune n'est dans aucun jour","Mardi","Vendredi"]},
+    {q:"Pierre est né le 28 février 1988. Combien de fois a-t-il fêté son anniversaire le vrai jour en 30 ans ?",a:"8 fois (années bissextiles)",c:["8 fois (années bissextiles)","30 fois","0 fois","15 fois"]},
+    {q:"Qu'est-ce qui appartient à chacun mais est plus souvent utilisé par les autres ?",a:"Votre prénom",c:["Votre prénom","Votre photo","Votre réputation","Votre histoire"]},
+    {q:"Un train part de Paris à 120 km/h. Un autre part de Lyon à 100 km/h. Lequel sera le plus proche de Paris quand ils se rencontrent ?",a:"Ils seront au même endroit",c:["Ils seront au même endroit","Celui de Paris","Celui de Lyon","Impossible à dire"]},
+    {q:"Combien y a-t-il de secondes dans une année ?",a:"31 536 000 secondes",c:["31 536 000 secondes","365 000 secondes","8 760 000 secondes","1 000 000 secondes"]},
+    {q:"Qu'est-ce qui monte et monte, mais ne descend jamais ?",a:"L'âge",c:["L'âge","La montgolfière","La fumée","Le prix de l'immobilier"]},
+    {q:"Si 5 machines fabriquent 5 widgets en 5 minutes, combien faut-il de machines pour fabriquer 100 widgets en 100 minutes ?",a:"5 machines",c:["5 machines","100 machines","20 machines","10 machines"]},
+  ],
+
 };
 
 // ══════════════════════════════════════
@@ -570,27 +938,28 @@ function updateMemInfo(){
   if(el)el.innerHTML=n>0?`<span>${n} questions</span> mémorisées (${MEM_DAYS}j) — évitées à la prochaine partie`:'Aucun historique — toutes les questions disponibles';
 }
 
-// ══════════════════════════════════════
-// OPEN TRIVIA API
-// ══════════════════════════════════════
-async function fetchOTDB(catId,amount){
-  const cat=CATEGORIES.find(c=>c.id===catId);
-  if(!cat||!cat.otdb)return[];
-  try{
-    const r=await fetch(`https://opentdb.com/api.php?amount=${amount}&category=${cat.otdb}&type=multiple&encode=url3986`);
-    const d=await r.json();
-    if(d.response_code!==0)return[];
-    return d.results.map(item=>{
-      const a=decodeURIComponent(item.correct_answer);
-      const choices=shuffleCopy([a,...item.incorrect_answers.map(x=>decodeURIComponent(x))]);
-      return{q:decodeURIComponent(item.question),a,c:choices,cat:cat.label};
-    });
-  }catch(e){return[];}
-}
+// API OTDB désactivée — uniquement base française manuelle
 
 // ══════════════════════════════════════
 // INIT
 // ══════════════════════════════════════
+const IMG = {
+  'nike': 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iODAiIGZpbGw9IiMxMTEiLz48cGF0aCBkPSJNMjAgNTUgUTgwIDE1IDE3MCAyNSBRMTIwIDQ1IDYwIDUwIFoiIGZpbGw9IndoaXRlIi8+PC9zdmc+',
+  'adidas': 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0id2hpdGUiLz48cG9seWdvbiBwb2ludHM9IjEwMCwxMCAxMzAsNzAgNzAsNzAiIGZpbGw9ImJsYWNrIi8+PHJlY3QgeD0iNTAiIHk9Ijc1IiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjgiIGZpbGw9ImJsYWNrIi8+PHJlY3QgeD0iNDAiIHk9Ijg2IiB3aWR0aD0iMTIwIiBoZWlnaHQ9IjgiIGZpbGw9ImJsYWNrIi8+PHRleHQgeD0iMTAwIiB5PSI1MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIEJsYWNrIiBmb250LXNpemU9IjEwIiBmaWxsPSJ3aGl0ZSI+YWRpZGFzPC90ZXh0Pjwvc3ZnPg==',
+  'mcdo': 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI0RBMjkxQyIvPjx0ZXh0IHg9IjEwMCIgeT0iMTYwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwgQmxhY2siIGZvbnQtc2l6ZT0iMTYwIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjRkZDNzJDIj5NPC90ZXh0Pjwvc3ZnPg==',
+  'apple': 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0id2hpdGUiLz48cGF0aCBkPSJNMTMwIDQwIEMxMzAgNDAgMTQ1IDI4IDE0NSAxNSBDMTMyIDE3IDExOCAyOCAxMTggNDAgWiBNMTUwIDc1IEMxNDAgNjAgMTI1IDU1IDExNSA1NSBDMTA1IDU1IDk1IDYyIDg4IDYyIEM4MCA2MiA2OCA1NSA1NSA1NyBDMzggNjAgMjAgNzUgMjAgMTA1IEMyMCAxNDUgNTAgMTc1IDcwIDE3NSBDODIgMTc1IDkwIDE2OCAxMDAgMTY4IEMxMTAgMTY4IDExOCAxNzUgMTMwIDE3NSBDMTUyIDE3NSAxNzggMTQ4IDE3OCAxMDUgQzE3OCA4MCAxNjUgNzUgMTUwIDc1IFoiIGZpbGw9IiM1NTUiLz48L3N2Zz4=',
+  'redbull': 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iODAiIGZpbGw9IiNDQzFFMUUiLz48dGV4dCB4PSIxMDAiIHk9IjMwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwgQmxhY2siIGZvbnQtc2l6ZT0iMTYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNGRkQ3MDAiPlJFRCBCVUxMPC90ZXh0Pjx0ZXh0IHg9IjEwMCIgeT0iNTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMSIgZmlsbD0id2hpdGUiPmRvbm5lIGRlcyBhaWxlczwvdGV4dD48Y2lyY2xlIGN4PSI1MCIgY3k9IjQwIiByPSIyMCIgZmlsbD0iI0ZGRDcwMCIgb3BhY2l0eT0iMC44Ii8+PGNpcmNsZSBjeD0iMTUwIiBjeT0iNDAiIHI9IjIwIiBmaWxsPSIjRkZENzAwIiBvcGFjaXR5PSIwLjgiLz48L3N2Zz4=',
+  'loreal': 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iODAiIGZpbGw9IiMwMDAiLz48dGV4dCB4PSIxMDAiIHk9IjM1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2VyaWYiIGZvbnQtc2l6ZT0iMjIiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjQzlBODRDIiBsZXR0ZXItc3BhY2luZz0iMyI+TCdPUsOJQUw8L3RleHQ+PHRleHQgeD0iMTAwIiB5PSI1OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9InNlcmlmIiBmb250LXNpemU9IjkiIGZpbGw9IiNDOUE4NEMiIGxldHRlci1zcGFjaW5nPSIyIj5QQVJJUzwvdGV4dD48L3N2Zz4=',
+  'carlsberg': 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iODAiIGZpbGw9IiMxQjZCMkIiLz48dGV4dCB4PSIxMDAiIHk9IjQ1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2VyaWYiIGZvbnQtc2l6ZT0iMjYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjRkZENzAwIiBsZXR0ZXItc3BhY2luZz0iMSI+Q2FybHNiZXJnPC90ZXh0Pjwvc3ZnPg==',
+  'peugeot': 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0id2hpdGUiLz48cGF0aCBkPSJNMTAwIDIwIEwxMjAgNTAgTDExNSA1NSBMMTI1IDY1IEwxMDAgMTgwIEw3NSA2NSBMODUgNTUgTDgwIDUwIFoiIGZpbGw9IiMxQzFDMUMiIHN0cm9rZT0iIzFDMUMxQyIgc3Ryb2tlLXdpZHRoPSIyIi8+PGNpcmNsZSBjeD0iMTAwIiBjeT0iNDAiIHI9IjI4IiBmaWxsPSJub25lIiBzdHJva2U9IiMxQzFDMUMiIHN0cm9rZS13aWR0aD0iOCIvPjwvc3ZnPg==',
+  'goldorak': 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzBhMGEyYSIvPjxwb2x5Z29uIHBvaW50cz0iMTAwLDIwIDEzMCw2MCAxMjAsNjAgMTIwLDEwMCAxMzAsMTAwIDEzMCwxNjAgMTAwLDE4MCA3MCwxNjAgNzAsMTAwIDgwLDEwMCA4MCw2MCA3MCw2MCIgZmlsbD0iIzg4OCIgc3Ryb2tlPSIjRkZENzAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSI1MCIgcj0iMTgiIGZpbGw9IiM0NDQiIHN0cm9rZT0iI0ZGRDcwMCIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBvbHlnb24gcG9pbnRzPSI4NSwzMCAxMDAsMTUgMTE1LDMwIiBmaWxsPSIjRkZENzAwIi8+PHJlY3QgeD0iODgiIHk9IjQyIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiMwMENDRkYiIHJ4PSIyIi8+PHJlY3QgeD0iMTAyIiB5PSI0MiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjMDBDQ0ZGIiByeD0iMiIvPjx0ZXh0IHg9IjEwMCIgeT0iMTk4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwgQmxhY2siIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiNGRkQ3MDAiPkdPTERPUkFLPC90ZXh0Pjwvc3ZnPg==',
+  'smurf': 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzg3Q0VFQiIvPjxlbGxpcHNlIGN4PSIxMDAiIGN5PSIxMzAiIHJ4PSI0MCIgcnk9IjU1IiBmaWxsPSIjNEY5NENEIi8+PGNpcmNsZSBjeD0iMTAwIiBjeT0iODAiIHI9IjM4IiBmaWxsPSIjNEY5NENEIi8+PGVsbGlwc2UgY3g9Ijg4IiBjeT0iNzUiIHJ4PSI3IiByeT0iOSIgZmlsbD0id2hpdGUiLz48ZWxsaXBzZSBjeD0iMTEyIiBjeT0iNzUiIHJ4PSI3IiByeT0iOSIgZmlsbD0id2hpdGUiLz48Y2lyY2xlIGN4PSI4OCIgY3k9Ijc3IiByPSI0IiBmaWxsPSIjMWExYTFhIi8+PGNpcmNsZSBjeD0iMTEyIiBjeT0iNzciIHI9IjQiIGZpbGw9IiMxYTFhMWEiLz48cGF0aCBkPSJNODggOTUgUTEwMCAxMDUgMTEyIDk1IiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik02MiA3MiBRMTAwIDMwIDEzOCA3MiIgZmlsbD0id2hpdGUiIHN0cm9rZT0id2hpdGUiLz48dGV4dCB4PSIxMDAiIHk9IjE5OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIEJsYWNrIiBmb250LXNpemU9IjExIiBmaWxsPSIjMWExYTZlIj5MRVMgU0NIVFJPVU1QRlM8L3RleHQ+PC9zdmc+',
+  'mario': 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzVDOTRGQyIvPjxyZWN0IHg9IjcwIiB5PSI1MCIgd2lkdGg9IjYwIiBoZWlnaHQ9IjE1IiBmaWxsPSIjRTA0MDQwIiByeD0iNSIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjkwIiByPSIzNSIgZmlsbD0iI0ZGQ0M5OSIvPjxlbGxpcHNlIGN4PSIxMDAiIGN5PSI4MCIgcng9IjI4IiByeT0iMTgiIGZpbGw9IiNFMDQwNDAiLz48ZWxsaXBzZSBjeD0iODgiIGN5PSI4OCIgcng9IjgiIHJ5PSIxMCIgZmlsbD0id2hpdGUiLz48ZWxsaXBzZSBjeD0iMTEyIiBjeT0iODgiIHJ4PSI4IiByeT0iMTAiIGZpbGw9IndoaXRlIi8+PGNpcmNsZSBjeD0iODgiIGN5PSI5MCIgcj0iNSIgZmlsbD0iIzFhMWExYSIvPjxjaXJjbGUgY3g9IjExMiIgY3k9IjkwIiByPSI1IiBmaWxsPSIjMWExYTFhIi8+PHJlY3QgeD0iODIiIHk9IjEwMiIgd2lkdGg9IjM2IiBoZWlnaHQ9IjgiIGZpbGw9IiM0YTJhMTAiIHJ4PSIyIi8+PHJlY3QgeD0iNjUiIHk9IjExNSIgd2lkdGg9IjcwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjNDA0MENDIiByeD0iNSIvPjxyZWN0IHg9IjU1IiB5PSIxMzAiIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MCIgZmlsbD0iIzQwNDBDQyIgcng9IjUiLz48cmVjdCB4PSIxMjAiIHk9IjEzMCIgd2lkdGg9IjI1IiBoZWlnaHQ9IjQwIiBmaWxsPSIjNDA0MENDIiByeD0iNSIvPjx0ZXh0IHg9IjEwMCIgeT0iMTk4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwgQmxhY2siIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiNFMDQwNDAiPk1BUklPPC90ZXh0Pjwvc3ZnPg==',
+  'dragonball': 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI0ZGNkIwMCIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9Ijk1IiByPSI2NSIgZmlsbD0iI0ZGRDcwMCIgc3Ryb2tlPSIjRkY4ODAwIiBzdHJva2Utd2lkdGg9IjQiLz48Y2lyY2xlIGN4PSI4NSIgY3k9IjgwIiByPSIxMiIgZmlsbD0iI0ZGODgwMCIvPjxjaXJjbGUgY3g9IjExMCIgY3k9Ijc1IiByPSI5IiBmaWxsPSIjRkY4ODAwIi8+PGNpcmNsZSBjeD0iNzUiIGN5PSIxMDAiIHI9IjciIGZpbGw9IiNGRjg4MDAiLz48Y2lyY2xlIGN4PSIxMTgiIGN5PSIxMDAiIHI9IjExIiBmaWxsPSIjRkY4ODAwIi8+PGNpcmNsZSBjeD0iOTAiIGN5PSIxMTUiIHI9IjgiIGZpbGw9IiNGRjg4MDAiLz48dGV4dCB4PSIxMDAiIHk9IjE5OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIEJsYWNrIiBmb250LXNpemU9IjExIiBmaWxsPSJ3aGl0ZSI+RFJBR09OIEJBTEw8L3RleHQ+PC9zdmc+',
+  'candy': 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI0ZGQjdENSIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjkwIiByPSI0NSIgZmlsbD0iI0ZGRTRDNCIvPjxlbGxpcHNlIGN4PSI4NSIgY3k9Ijc4IiByeD0iOSIgcnk9IjEyIiBmaWxsPSJ3aGl0ZSIvPjxlbGxpcHNlIGN4PSIxMTUiIGN5PSI3OCIgcng9IjkiIHJ5PSIxMiIgZmlsbD0id2hpdGUiLz48Y2lyY2xlIGN4PSI4NSIgY3k9IjgwIiByPSI1IiBmaWxsPSIjNDE2OUUxIi8+PGNpcmNsZSBjeD0iMTE1IiBjeT0iODAiIHI9IjUiIGZpbGw9IiM0MTY5RTEiLz48ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTAwIiByeD0iMTIiIHJ5PSI4IiBmaWxsPSIjRkY5OTk5Ii8+PHBhdGggZD0iTTgyIDExNSBRMTAwIDEzMCAxMTggMTE1IiBzdHJva2U9IiNGRjY2OTkiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIvPjxlbGxpcHNlIGN4PSI3NSIgY3k9IjcyIiByeD0iNiIgcnk9IjEwIiBmaWxsPSIjRkZENzAwIiB0cmFuc2Zvcm09InJvdGF0ZSgtMjAgNzUgNzIpIi8+PGVsbGlwc2UgY3g9IjEyNSIgY3k9IjcyIiByeD0iNiIgcnk9IjEwIiBmaWxsPSIjRkZENzAwIiB0cmFuc2Zvcm09InJvdGF0ZSgyMCAxMjUgNzIpIi8+PHRleHQgeD0iMTAwIiB5PSIxOTgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjayIgZm9udC1zaXplPSIxNCIgZmlsbD0iI0ZGMzM5OSI+Q0FORFk8L3RleHQ+PC9zdmc+',
+  'tortues': 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzFhMWExYSIvPjxlbGxpcHNlIGN4PSIxMDAiIGN5PSIxMDAiIHJ4PSI1NSIgcnk9IjYwIiBmaWxsPSIjMjI4QjIyIi8+PGVsbGlwc2UgY3g9IjEwMCIgY3k9IjEwMCIgcng9IjQ1IiByeT0iNTAiIGZpbGw9IiMyRThCNTciLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSI2NSIgcj0iMjIiIGZpbGw9IiM4QjczNTUiLz48cmVjdCB4PSI4NSIgeT0iNTUiIHdpZHRoPSIzMCIgaGVpZ2h0PSI2IiBmaWxsPSIjNDE2OUUxIiByeD0iMyIvPjxlbGxpcHNlIGN4PSI4OCIgY3k9IjY4IiByeD0iNyIgcnk9IjkiIGZpbGw9IndoaXRlIi8+PGVsbGlwc2UgY3g9IjExMiIgY3k9IjY4IiByeD0iNyIgcnk9IjkiIGZpbGw9IndoaXRlIi8+PGNpcmNsZSBjeD0iODgiIGN5PSI3MCIgcj0iNCIgZmlsbD0iIzFhMWExYSIvPjxjaXJjbGUgY3g9IjExMiIgY3k9IjcwIiByPSI0IiBmaWxsPSIjMWExYTFhIi8+PHRleHQgeD0iMTAwIiB5PSIxOTgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjayIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzMyQ0QzMiI+VE9SVFVFUyBOSU5KQTwvdGV4dD48L3N2Zz4=',
+};
+
 function init(){
   // Code salle : toujours 4 caractères, sans ambiguïté O/0 I/1
   const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -622,8 +991,9 @@ function init(){
   updateMemInfo();
 
   // Clé YouTube mémorisée
-  const savedKey=localStorage.getItem('yt_api_key')||'';
-  if(savedKey)document.getElementById('ytkey').value=savedKey;
+  const savedKey=localStorage.getItem('yt_api_key')||'AIzaSyBEVtoBBSIerLd8oCNTspPonGBUk6JtXdk';
+  localStorage.setItem('yt_api_key',savedKey);
+  document.getElementById('ytkey').value=savedKey;
 
   // YouTube IFrame API
   const s=document.createElement('script');
@@ -882,7 +1252,7 @@ function toggleCat(id,el){
 }
 function setQC(n,el){quizCount=n;document.querySelectorAll('.qcpill').forEach(p=>p.classList.remove('on'));el.classList.add('on');}
 
-async function startQuiz(){
+function startQuiz(){
   go('quiz-game');
   document.getElementById('qtxt').textContent='Chargement des questions...';
   document.getElementById('agrid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;"><div class="spinner"></div></div>';
@@ -892,24 +1262,12 @@ async function startQuiz(){
 
   for(const catId of selCats){
     const cat=CATEGORIES.find(c=>c.id===catId);
-    // Questions manuelles non vues
-    const manual=(MANUAL[catId]||[]).map(q=>({...q,cat:cat.label})).filter(q=>!mem[hashQ(q.q)]);
-    // Questions OTDB
-    let otdb=[];
-    if(cat.otdb>0){
-      otdb=(await fetchOTDB(catId,20)).filter(q=>!mem[hashQ(q.q)]);
-    }
-    const combined=[...manual,...otdb];
-    shuffle(combined);
-    pool=pool.concat(combined);
-  }
-
-  // Si pas assez, on prend aussi les vues
-  if(pool.length<quizCount){
-    for(const catId of selCats){
-      const cat=CATEGORIES.find(c=>c.id===catId);
-      (MANUAL[catId]||[]).forEach(q=>{if(!pool.find(p=>p.q===q.q))pool.push({...q,cat:cat.label});});
-    }
+    const manual=(MANUAL[catId]||[]).map(q=>({...q,cat:cat.label}));
+    const fresh=manual.filter(q=>!mem[hashQ(q.q)]);
+    // Si pas assez de fraîches, on prend toutes
+    const toAdd=fresh.length>=3?fresh:manual;
+    shuffle(toAdd);
+    pool=pool.concat(toAdd);
   }
 
   shuffle(pool);
@@ -935,8 +1293,15 @@ function loadQ(){
   document.getElementById('auto-bar').style.display='none';
   // Mélanger les choix avant affichage ET avant broadcast
   const sc=shuffleCopy(q.c);
+  // Afficher image si disponible
+  const imgHtml = q.img && IMG[q.img] ? `<div style="text-align:center;margin-bottom:10px;"><img src="${IMG[q.img]}" style="max-height:120px;max-width:280px;border-radius:12px;object-fit:contain;"></div>` : '';
   document.getElementById('agrid').innerHTML=sc.map(a=>`<button class="abtn" onclick="selectAns()">${a}</button>`).join('');
-  broadcast('state',{phase:'quiz-question',idx:quizIdx,q:q.q,cat:q.cat,choices:sc,answer:q.a});
+  // Injecter l'image dans le qcard
+  const imgEl = document.getElementById('qimg');
+  if(imgEl) imgEl.innerHTML = imgHtml;
+  // Envoyer l'image data URI si disponible
+  const imgData = q.img && IMG[q.img] ? IMG[q.img] : null;
+  broadcast('state',{phase:'quiz-question',idx:quizIdx,q:q.q,cat:q.cat,choices:sc,answer:q.a,imgData});
   quizTimer=setInterval(()=>{
     quizTime--;
     if(!quizDone){
