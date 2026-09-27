@@ -75,7 +75,7 @@ body{display:flex;flex-direction:column;}
 .spts{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;}
 
 /* SCORE FINAL */
-#score-screen{background:radial-gradient(ellipse 120% 50% at 50% 0%,#100a2a 0%,var(--bg) 70%);text-align:center;}
+#score-screen{background:radial-gradient(ellipse 120% 50% at 50% 0%,#100a2a 0%,var(--bg) 70%);text-align:center;justify-content:flex-start;padding-top:16px;overflow-y:auto;}
 .myrank{font-family:'Outfit',sans-serif;font-size:72px;font-weight:900;}
 .srlist{width:100%;display:flex;flex-direction:column;gap:7px;}
 .srrow{background:var(--s1);border:1px solid var(--border);border-radius:9px;padding:9px 12px;display:flex;align-items:center;gap:9px;}
@@ -130,17 +130,21 @@ body{display:flex;flex-direction:column;}
 
 <!-- QUIZ -->
 <div class="screen" id="quiz-screen">
-  <div class="qmini"><div class="qmcat" id="qmcat">—</div><div class="qmtxt" id="qmtxt">En attente...</div></div>
+  <div class="qmini"><div class="qmcat" id="qmcat">—</div><div id="qmimg" style="text-align:center;"></div><div class="qmtxt" id="qmtxt">En attente...</div></div>
   <div class="amob" id="amob"></div>
   <div class="scorewrap" id="qscores"></div>
 </div>
 
 <!-- SCORE FINAL -->
 <div class="screen" id="score-screen">
-  <div style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:900;">🏆 Résultats</div>
-  <div class="myrank" id="myrank">—</div>
-  <div class="srlist" id="srlist"></div>
-  <button onclick="go('join')" style="margin-top:10px;background:transparent;border:1px solid #333355;color:var(--dim);font-family:'Outfit',sans-serif;padding:11px 22px;border-radius:12px;font-size:14px;cursor:pointer;">← Retour</button>
+  <div style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;">🏆 Résultats</div>
+  <div id="myrank-wrap" style="background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:16px;width:100%;text-align:center;">
+    <div class="myrank" id="myrank">—</div>
+    <div id="myrank-msg" style="font-size:15px;color:var(--dim);margin-top:4px;"></div>
+  </div>
+  <div style="font-size:10px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;align-self:flex-start;">Classement complet</div>
+  <div class="srlist" id="srlist" style="width:100%;"></div>
+  <button onclick="go('join')" style="margin-top:6px;background:transparent;border:1px solid #333355;color:var(--dim);font-family:'Outfit',sans-serif;padding:11px 22px;border-radius:12px;font-size:14px;cursor:pointer;">← Retour</button>
 </div>
 
 <script>
@@ -274,6 +278,9 @@ function handleQuiz(p,s){
     document.getElementById('amob').innerHTML='';
   }else if(p==='quiz-question'){
     document.getElementById('qmcat').textContent=s.cat||'';
+    // Image si présente
+    const imgEl=document.getElementById('qmimg');
+    if(imgEl) imgEl.innerHTML = s.imgData ? `<img src="${s.imgData}" style="max-height:110px;max-width:100%;border-radius:10px;margin-bottom:8px;object-fit:contain;">` : '';
     document.getElementById('qmtxt').textContent=s.q||'';
     const ans=s.answer;
     // Couleurs fixes par position — mélange déjà fait côté master
@@ -334,8 +341,31 @@ function showScores(arr){
   const sorted=[...arr].sort((a,b)=>b.score-a.score);
   const medals=['🥇','🥈','🥉'];
   const mi=sorted.findIndex(p=>p.id===myId);
-  document.getElementById('myrank').textContent=medals[mi]||(mi>=0?'#'+(mi+1):'?');
-  document.getElementById('srlist').innerHTML=sorted.map((p,i)=>`<div class="srrow" style="${p.id===myId?'border-color:'+p.color:''}"><div class="srrank">${medals[i]||i+1}</div><div class="srname" style="color:${p.color}">${p.name}</div><div class="srpts" style="color:${p.color}">${p.score} pts</div></div>`).join('');
+  const myMedal=medals[mi]||(mi>=0?'#'+(mi+1):'?');
+  const msgs=['Bravo champion !','Très bien joué !','Sur le podium !','Bonne partie !','Bien essayé !'];
+
+  // Mon rang
+  document.getElementById('myrank').textContent=myMedal;
+  document.getElementById('myrank-msg').textContent=msgs[mi]||msgs[4];
+
+  // Classement complet avec barres
+  const maxScore=Math.max(...sorted.map(p=>p.score),1);
+  document.getElementById('srlist').innerHTML=sorted.map((p,i)=>`
+    <div class="srrow" style="border-color:${p.id===myId?p.color:'transparent'};background:${p.id===myId?p.color+'11':'var(--s1)'};">
+      <div class="srrank" style="font-size:20px;">${medals[i]||i+1}</div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:${p.id===myId?900:700};color:${p.color};">
+            ${p.name}${p.id===myId?' 👈':''}
+          </div>
+          <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:900;color:${p.color};">${p.score} pts</div>
+        </div>
+        <div style="width:100%;height:5px;background:var(--s2);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;background:${p.color};border-radius:3px;width:${Math.round(p.score/maxScore*100)}%;"></div>
+        </div>
+      </div>
+    </div>`).join('');
+
   go('score-screen');
 }
 
