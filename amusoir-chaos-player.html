@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>CHAOS TOTAL — Joueur</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="ably.min-1.js"></script>
+<style>
+:root{--bg:#07070f;--s1:#0f0f1c;--s2:#16162a;--gold:#f5c542;--cyan:#00e5ff;--pink:#ff2d6b;--green:#00f5a0;--orange:#ff7b00;--purple:#c77dff;--text:#f0f0ff;--dim:#666688;--border:rgba(255,255,255,0.08);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;overflow:hidden;}
+body{display:flex;flex-direction:column;}
+.screen{display:none;flex-direction:column;height:100%;padding:16px;align-items:center;justify-content:center;gap:14px;}
+.screen.active{display:flex;}
+
+/* JOIN */
+#join{background:radial-gradient(ellipse 120% 60% at 50% 0%,#1a0a35 0%,var(--bg) 70%);}
+.logo{font-size:42px;font-weight:900;background:linear-gradient(135deg,var(--orange),var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.jcard{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:22px 18px;width:100%;display:flex;flex-direction:column;gap:12px;}
+.jcard label{font-size:10px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;font-family:'DM Mono',monospace;}
+.jcard input{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;color:var(--text);font-family:'Outfit',sans-serif;font-size:20px;outline:none;text-align:center;width:100%;}
+#roomin{text-transform:uppercase;letter-spacing:6px;font-size:22px;font-weight:900;}
+.btn-join{font-family:'Outfit',sans-serif;font-weight:900;font-size:17px;padding:15px;border-radius:14px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--orange),var(--pink));color:white;width:100%;touch-action:manipulation;}
+
+/* LOBBY */
+#player-lobby{background:radial-gradient(ellipse 120% 60% at 50% 0%,#1a0a35 0%,var(--bg) 70%);text-align:center;gap:16px;}
+.mybadge{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;}
+.mydot{width:40px;height:40px;border-radius:50%;}
+.myname{font-size:26px;font-weight:900;}
+.waiting-dots{color:var(--dim);font-size:12px;letter-spacing:2px;}
+.pdot-anim{width:7px;height:7px;border-radius:50%;background:var(--orange);display:inline-block;animation:pulse 1.5s ease-in-out infinite;margin-right:6px;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.4)}}
+
+/* QUESTION */
+#q-screen{background:var(--bg);justify-content:flex-start;padding-top:12px;overflow-y:auto;}
+.q-header{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.q-counter{font-size:12px;color:var(--gold);font-weight:900;}
+.q-type-badge{padding:3px 10px;border-radius:10px;font-size:10px;letter-spacing:2px;}
+.q-bar{width:100%;height:4px;background:var(--s2);border-radius:2px;overflow:hidden;margin-bottom:10px;}
+.q-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--pink));border-radius:2px;transition:width .5s;}
+.q-txt{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px 16px;width:100%;font-size:clamp(15px,4.5vw,21px);font-weight:900;line-height:1.4;text-align:center;}
+
+/* MCQ */
+.mcq-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;}
+.mcq-btn{border:none;border-radius:16px;padding:14px 10px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:clamp(13px,4vw,17px);font-weight:800;color:white;min-height:80px;text-align:center;touch-action:manipulation;transition:.15s;}
+.mcq-btn:active:not(:disabled){transform:scale(.93);}
+.mcq-btn.selected{box-shadow:0 0 0 4px white!important;transform:scale(1.03)!important;}
+.mcq-btn.right{box-shadow:0 0 0 4px white,0 0 20px rgba(255,255,255,.4)!important;}
+.mcq-btn.wrong{opacity:.25;}
+
+/* ESTIMATION */
+.estim-container{width:100%;display:flex;flex-direction:column;gap:14px;align-items:center;}
+.estim-big{font-size:54px;font-weight:900;color:var(--cyan);}
+.estim-unit{font-size:13px;color:var(--dim);margin-top:-10px;}
+.estim-slider{width:100%;-webkit-appearance:none;height:10px;border-radius:5px;background:var(--s2);outline:none;}
+.estim-slider::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:var(--cyan);cursor:pointer;box-shadow:0 0 14px var(--cyan);}
+.submit-btn{font-family:'Outfit',sans-serif;font-weight:900;font-size:16px;padding:14px 28px;border-radius:14px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--cyan),#0099bb);color:#001a20;touch-action:manipulation;width:100%;}
+.submit-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* VOTE */
+.vote-container{width:100%;display:flex;flex-direction:column;gap:10px;}
+.vote-btn{border:none;border-radius:16px;padding:22px 16px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:17px;font-weight:900;color:white;touch-action:manipulation;text-align:center;transition:.15s;}
+.vote-btn:nth-child(1){background:linear-gradient(135deg,var(--cyan),#0099bb);}
+.vote-btn:nth-child(2){background:linear-gradient(135deg,var(--pink),#aa1040);}
+.vote-btn.selected{box-shadow:0 0 0 4px white!important;transform:scale(1.02)!important;}
+.vote-btn:disabled{opacity:.5;}
+
+/* JACKPOT */
+.jackpot-container{width:100%;display:flex;flex-direction:column;gap:14px;align-items:center;}
+.jackpot-input-wrap{display:flex;gap:8px;width:100%;}
+.jackpot-input{flex:1;background:var(--s1);border:2px solid var(--gold);border-radius:12px;padding:14px;color:var(--gold);font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;outline:none;text-align:center;}
+.bet-label{font-size:11px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;align-self:flex-start;}
+.bet-btns{display:flex;gap:8px;width:100%;flex-wrap:wrap;}
+.bet-btn{flex:1;min-width:60px;padding:12px;border:2px solid var(--border);border-radius:12px;background:var(--s1);color:var(--dim);font-family:'Outfit',sans-serif;font-size:15px;font-weight:900;cursor:pointer;touch-action:manipulation;transition:.2s;}
+.bet-btn.on{border-color:var(--gold);color:var(--gold);background:rgba(245,197,66,.1);}
+
+/* WAITING */
+.wait-anim{font-size:44px;animation:bounce 1s ease-in-out infinite alternate;}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-12px)}}
+
+/* REVEAL */
+.reveal-mob{background:var(--s2);border:2px solid var(--green);border-radius:16px;padding:16px;width:100%;text-align:center;}
+.reveal-mob-title{font-size:20px;font-weight:900;color:var(--green);}
+.reveal-mob-pts{font-size:28px;font-weight:900;color:var(--gold);margin-top:8px;}
+.reveal-mob-txt{font-size:12px;color:var(--dim);margin-top:6px;line-height:1.6;}
+
+/* SCORES */
+.scores-mob{width:100%;display:flex;flex-direction:column;gap:6px;}
+.score-row{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:10px;}
+
+/* FINAL */
+#final-screen{background:radial-gradient(ellipse 120% 50% at 50% 0%,#100a2a 0%,var(--bg) 70%);text-align:center;}
+.my-final-rank{font-size:72px;font-weight:900;}
+
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--border);padding:9px 18px;border-radius:9px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;z-index:1000;}
+.toast.show{opacity:1;}
+.sbar{position:fixed;top:9px;right:11px;font-size:10px;padding:3px 9px;border-radius:15px;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;gap:5px;z-index:50;}
+.sled{width:6px;height:6px;border-radius:50%;background:#444;}
+.sled.ok{background:var(--green);}
+</style>
+</head>
+<body>
+<div class="sbar"><div class="sled" id="sled"></div><span id="stxt">—</span></div>
+<div class="toast" id="toast"></div>
+
+<!-- JOIN -->
+<div class="screen active" id="join">
+  <div class="logo">💥 CHAOS</div>
+  <div class="jcard">
+    <label>Ton prénom</label>
+    <input type="text" id="namein" placeholder="Marie" maxlength="14" autocomplete="off" autocapitalize="words">
+    <label>Code de la salle</label>
+    <input type="text" id="roomin" placeholder="XXXX" maxlength="6" autocomplete="off" autocapitalize="characters">
+    <button class="btn-join" id="join-btn">REJOINDRE 💥</button>
+  </div>
+</div>
+
+<!-- LOBBY -->
+<div class="screen" id="player-lobby">
+  <div class="mybadge">
+    <div class="mydot" id="mydot"></div>
+    <div class="myname" id="mynamedisplay">—</div>
+    <div style="font-size:11px;color:var(--dim);">Salle <span id="myroom" style="color:var(--gold);font-weight:900;letter-spacing:4px;">—</span></div>
+  </div>
+  <div class="waiting-dots"><span class="pdot-anim"></span>En attente du maître...</div>
+</div>
+
+<!-- QUESTION -->
+<div class="screen" id="q-screen">
+  <div class="q-header">
+    <span class="q-counter" id="q-counter">— / —</span>
+    <span class="q-type-badge" id="q-type-badge"></span>
+  </div>
+  <div class="q-bar"><div class="q-fill" id="q-fill" style="width:100%"></div></div>
+  <div class="q-txt" id="q-txt">En attente...</div>
+  <div id="q-inputs" style="width:100%;display:flex;flex-direction:column;gap:10px;"></div>
+  <div class="reveal-mob" id="reveal-mob" style="display:none;">
+    <div class="reveal-mob-title" id="reveal-title">—</div>
+    <div class="reveal-mob-pts" id="reveal-pts"></div>
+    <div class="reveal-mob-txt" id="reveal-txt">—</div>
+  </div>
+  <div class="scores-mob" id="scores-mob"></div>
+</div>
+
+<!-- FINAL -->
+<div class="screen" id="final-screen">
+  <div style="font-size:24px;font-weight:900;">💥 RÉSULTATS</div>
+  <div class="my-final-rank" id="my-final-rank">—</div>
+  <div id="final-msg" style="font-size:15px;color:var(--dim);"></div>
+  <div class="scores-mob" id="final-scores" style="width:100%;margin-top:10px;"></div>
+  <button onclick="go('join')" style="margin-top:10px;background:transparent;border:1px solid #333355;color:var(--dim);font-family:'Outfit',sans-serif;padding:11px 22px;border-radius:12px;font-size:14px;cursor:pointer;">← Retour</button>
+</div>
+
+<script>
+const ABLY_KEY='U7BRyw.wc4MuQ:5b4cqlgpCcY0b0-Hhl3if0pG9LqsshyQh9ovTu7j9KQ';
+const COLORS=['#ff2d6b','#00e5ff','#00f5a0','#f5c542','#ff7b00','#c77dff','#ff9ef5','#4cc9f0'];
+let myId=Math.random().toString(36).substring(2,10);
+let myName='',myColor='',roomCode='',ablyChan=null;
+let answered=false, myScore=0, myBet=0;
+
+window.addEventListener('load',()=>{
+  const r=new URLSearchParams(location.search).get('room');
+  if(r)document.getElementById('roomin').value=r.toUpperCase();
+});
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const btn=document.getElementById('join-btn');
+  btn.addEventListener('touchstart',e=>{e.preventDefault();joinRoom();},{passive:false});
+  btn.addEventListener('click',joinRoom);
+});
+
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+function joinRoom(){
+  myName=document.getElementById('namein').value.trim();
+  roomCode=document.getElementById('roomin').value.trim().toUpperCase();
+  if(!myName){showToast('Entre ton prénom !');return;}
+  if(!roomCode){showToast('Entre le code !');return;}
+  myColor=COLORS[Math.floor(Math.random()*COLORS.length)];
+  document.getElementById('mydot').style.background=myColor;
+  document.getElementById('mynamedisplay').textContent=myName;
+  document.getElementById('myroom').textContent=roomCode;
+  go('player-lobby');
+  connectAbly();
+}
+
+function connectAbly(){
+  const ably=new Ably.Realtime(ABLY_KEY);
+  ably.connection.on('connected',()=>{
+    document.getElementById('sled').className='sled ok';
+    document.getElementById('stxt').textContent='✓';
+    ablyChan=ably.channels.get('amusoir-chaos-'+roomCode);
+    ablyChan.subscribe('state',msg=>onState(msg.data));
+    ablyChan.publish('join',{id:myId,name:myName,color:myColor});
+  });
+}
+
+function onState(s){
+  const p=s.phase||'';
+  if(s.players)renderScores(s.players,'scores-mob');
+
+  if(p==='chaos-question'){
+    go('q-screen');
+    answered=false;myBet=0;
+    document.getElementById('reveal-mob').style.display='none';
+    document.getElementById('q-counter').textContent=((s.idx||0)+1)+' / '+(s.total||'?');
+    document.getElementById('q-txt').textContent=s.q||'';
+    document.getElementById('q-fill').style.width='100%';
+    renderInputs(s);
+  }
+  else if(p==='chaos-reveal'){
+    revealMob(s);
+    if(s.players)renderScores(s.players,'scores-mob');
+  }
+  else if(p==='scoreboard'){
+    showFinal(s.players);
+  }
+}
+
+function renderInputs(s){
+  const el=document.getElementById('q-inputs');
+  el.innerHTML='';
+  const badge=document.getElementById('q-type-badge');
+
+  if(s.type==='mcq'){
+    badge.textContent='QCM';badge.style.cssText='background:rgba(255,123,0,.2);color:var(--orange);border:1px solid var(--orange);';
+    const colors=['linear-gradient(135deg,#e63946,#c1121f)','linear-gradient(135deg,#2196f3,#0d47a1)','linear-gradient(135deg,#43a047,#1b5e20)','linear-gradient(135deg,#ffc107,#e65100)'];
+    const grid=document.createElement('div');grid.className='mcq-grid';
+    (s.opts||[]).forEach((opt,i)=>{
+      const btn=document.createElement('button');
+      btn.className='mcq-btn';btn.dataset.i=i;btn.textContent=opt;
+      btn.style.background=colors[i%4];
+      btn.addEventListener('touchstart',e=>{e.preventDefault();if(!answered)sendMCQ(i,btn);},{passive:false});
+      btn.addEventListener('click',()=>{if(!answered)sendMCQ(i,btn);});
+      grid.appendChild(btn);
+    });
+    el.appendChild(grid);
+  }
+  else if(s.type==='estimation'){
+    badge.textContent='ESTIMATION';badge.style.cssText='background:rgba(0,229,255,.2);color:var(--cyan);border:1px solid var(--cyan);';
+    const mid=Math.round(((s.min||0)+(s.max||100000))/2);
+    el.innerHTML=`
+      <div class="estim-container">
+        <div class="estim-big" id="estim-val">${mid.toLocaleString()}</div>
+        <div class="estim-unit">${s.unit||''}</div>
+        <input type="range" class="estim-slider" id="estim-slider" min="${s.min||0}" max="${s.max||100000}" value="${mid}" oninput="document.getElementById('estim-val').textContent=parseInt(this.value).toLocaleString()">
+        <button class="submit-btn" id="estim-submit" onclick="sendEstimate(${s.min||0},${s.max||100000})">VALIDER MA RÉPONSE ✓</button>
+      </div>`;
+  }
+  else if(s.type==='majority'){
+    badge.textContent='VOTE';badge.style.cssText='background:rgba(199,125,255,.2);color:var(--purple);border:1px solid var(--purple);';
+    const container=document.createElement('div');container.className='vote-container';
+    (s.opts||[]).forEach((opt,i)=>{
+      const btn=document.createElement('button');btn.className='vote-btn';btn.textContent=opt;
+      btn.addEventListener('touchstart',e=>{e.preventDefault();if(!answered)sendVote(i,btn);},{passive:false});
+      btn.addEventListener('click',()=>{if(!answered)sendVote(i,btn);});
+      container.appendChild(btn);
+    });
+    el.appendChild(container);
+  }
+  else if(s.type==='jackpot'){
+    badge.textContent='🎰 JACKPOT';badge.style.cssText='background:rgba(245,197,66,.2);color:var(--gold);border:1px solid var(--gold);';
+    el.innerHTML=`
+      <div class="jackpot-container">
+        <div class="jackpot-input-wrap">
+          <input type="number" class="jackpot-input" id="jackpot-val" placeholder="Ta réponse...">
+        </div>
+        <div class="bet-label">Ta mise (points à risquer)</div>
+        <div class="bet-btns">
+          <button class="bet-btn" onclick="selectBet(0,this)">0</button>
+          <button class="bet-btn" onclick="selectBet(25,this)">25</button>
+          <button class="bet-btn" onclick="selectBet(50,this)">50</button>
+          <button class="bet-btn" onclick="selectBet(100,this)">100</button>
+        </div>
+        <button class="submit-btn" onclick="sendJackpot()">MISER 🎰</button>
+      </div>`;
+  }
+}
+
+function sendMCQ(idx,btn){
+  answered=true;
+  document.querySelectorAll('.mcq-btn').forEach(b=>b.disabled=true);
+  btn.classList.add('selected');
+  if(ablyChan)ablyChan.publish('answer',{id:myId,name:myName,answerIdx:idx});
+}
+function sendEstimate(min,max){
+  if(answered)return;answered=true;
+  const val=parseInt(document.getElementById('estim-slider').value);
+  document.getElementById('estim-submit').disabled=true;
+  if(ablyChan)ablyChan.publish('estimate',{id:myId,name:myName,value:val});
+  showToast('Réponse envoyée : '+val.toLocaleString()+' ✓');
+}
+function sendVote(idx,btn){
+  answered=true;
+  document.querySelectorAll('.vote-btn').forEach(b=>b.disabled=true);
+  btn.classList.add('selected');
+  if(ablyChan)ablyChan.publish('vote',{id:myId,name:myName,optIdx:idx});
+}
+function selectBet(pts,btn){
+  myBet=pts;
+  document.querySelectorAll('.bet-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+function sendJackpot(){
+  if(answered)return;answered=true;
+  const val=parseInt(document.getElementById('jackpot-val').value)||0;
+  if(ablyChan)ablyChan.publish('jackpot',{id:myId,name:myName,value:val,bet:myBet});
+  showToast(`Misé ${myBet}pts sur ${val} ✓`);
+}
+
+function revealMob(s){
+  document.getElementById('q-inputs').innerHTML='';
+  const rev=document.getElementById('reveal-mob');
+  rev.style.display='block';
+  document.getElementById('reveal-title').textContent=s.reveal?.t||'Réponse !';
+  document.getElementById('reveal-txt').textContent=s.reveal?.d||'';
+  // Trouver mes points
+  const me=s.players?.find(p=>p.id===myId);
+  if(me){
+    const diff=me.score-(myScore||0);
+    myScore=me.score;
+    document.getElementById('reveal-pts').textContent=diff>0?`+${diff} pts 🎉`:diff<0?`${diff} pts 😬`:'';
+  }
+}
+
+function renderScores(arr,containerId){
+  const sorted=[...arr].sort((a,b)=>b.score-a.score);
+  const medals=['🥇','🥈','🥉'];
+  const max=sorted[0]?.score||1;
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  el.innerHTML=sorted.map((p,i)=>`
+    <div class="score-row" style="${p.id===myId?'border-color:'+p.color+';background:'+p.color+'11':''}">
+      <div style="font-size:18px;min-width:28px;">${medals[i]||i+1}</div>
+      <div style="flex:1;font-size:14px;font-weight:700;color:${p.color}">${p.name}${p.id===myId?' 👈':''}</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <div style="font-size:16px;font-weight:900;color:${p.color}">${p.score} pts</div>
+        <div style="width:80px;height:3px;background:var(--s2);border-radius:2px;overflow:hidden;"><div style="height:100%;background:${p.color};width:${p.score/max*100}%;"></div></div>
+      </div>
+    </div>`).join('');
+}
+
+function showFinal(arr){
+  if(!arr)return;
+  const sorted=[...arr].sort((a,b)=>b.score-a.score);
+  const medals=['🥇','🥈','🥉'];
+  const mi=sorted.findIndex(p=>p.id===myId);
+  const msgs=['Champion du chaos !','Podium du chaos !','Bronze chaotique !','Bien joué !','Pas mal !'];
+  document.getElementById('my-final-rank').textContent=medals[mi]||(mi>=0?'#'+(mi+1):'?');
+  document.getElementById('final-msg').textContent=msgs[mi]||msgs[4];
+  renderScores(arr,'final-scores');
+  go('final-screen');
+}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+</script>
+</body>
+</html>
