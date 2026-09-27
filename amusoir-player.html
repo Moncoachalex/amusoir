@@ -222,6 +222,10 @@ function onState(s){
     go('bt-screen');handleBT(p,s);
   }else if(['quiz-start','quiz-question','quiz-reveal'].includes(p)){
     go('quiz-screen');handleQuiz(p,s);
+  }else if(p==='chaos-question'){
+    go('quiz-screen');handleChaosQuestion(s);
+  }else if(p==='chaos-reveal'){
+    handleChaosReveal(s);
   }else if(p==='scoreboard'){
     showScores(s.players);
   }
@@ -380,6 +384,115 @@ function showScores(arr){
     </div>`).join('');
 
   go('score-screen');
+}
+
+
+// ══════════════════════════════════════
+// CHAOS TOTAL — Gestion player
+// ══════════════════════════════════════
+let chaosAnswered=false, myBet=0;
+
+function handleChaosQuestion(s){
+  chaosAnswered=false;myBet=0;
+  document.getElementById('qmcat').textContent='💥 CHAOS — '+(s.idx+1)+' / '+(s.total||'?');
+  document.getElementById('qmtxt').textContent=s.q||'';
+  document.getElementById('qmimg').innerHTML='';
+  document.getElementById('qscores').innerHTML='';
+
+  // Compteur
+  const qNum=(s.idx||0)+1;
+  document.getElementById('qcounter-num').textContent=qNum+' / '+(s.total||'?');
+  document.getElementById('qcounter-fill').style.width=(qNum/(s.total||qNum)*100)+'%';
+
+  const container=document.getElementById('amob');
+  container.innerHTML='';
+
+  if(s.type==='mcq'){
+    const colors=['linear-gradient(135deg,#e63946,#c1121f)','linear-gradient(135deg,#2196f3,#0d47a1)','linear-gradient(135deg,#43a047,#1b5e20)','linear-gradient(135deg,#ffc107,#e65100)'];
+    (s.opts||[]).forEach((a,i)=>{
+      const btn=document.createElement('button');
+      btn.className='abtn';btn.dataset.val=i;btn.textContent=a;
+      btn.style.background=colors[i%4];btn.style.animationDelay=(i*.06)+'s';
+      btn.addEventListener('touchstart',e=>{e.preventDefault();if(!chaosAnswered)sendChaosAnswer('answer',{id:myId,name:myName,answerIdx:i});highlightChaos(btn,container);},{passive:false});
+      btn.addEventListener('click',()=>{if(!chaosAnswered)sendChaosAnswer('answer',{id:myId,name:myName,answerIdx:i});highlightChaos(btn,container);});
+      container.appendChild(btn);
+    });
+  }
+  else if(s.type==='estimation'){
+    const min=s.min||0,max=s.max||100000,mid=Math.round((min+max)/2);
+    container.style.gridTemplateColumns='1fr';
+    container.innerHTML=`
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;grid-column:1/-1;">
+        <div style="font-family:'Outfit',sans-serif;font-size:46px;font-weight:900;color:var(--cyan);" id="pest-val">${mid.toLocaleString()}</div>
+        <div style="font-size:12px;color:var(--dim);">${s.unit||''}</div>
+        <input type="range" style="width:100%;-webkit-appearance:none;height:10px;border-radius:5px;background:var(--s2);" min="${min}" max="${max}" value="${mid}" id="pest-slider" oninput="document.getElementById('pest-val').textContent=parseInt(this.value).toLocaleString()">
+        <button style="font-family:'Outfit',sans-serif;font-weight:900;font-size:16px;padding:14px;border-radius:14px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--cyan),#0099bb);color:#001a20;width:100%;touch-action:manipulation;" onclick="submitEstimation('${s.unit||''}')">VALIDER ✓</button>
+      </div>`;
+  }
+  else if(s.type==='majority'){
+    container.style.gridTemplateColumns='1fr';
+    const colors=['linear-gradient(135deg,var(--cyan),#0099bb)','linear-gradient(135deg,var(--pink),#aa1040)'];
+    (s.opts||[]).forEach((opt,i)=>{
+      const btn=document.createElement('button');
+      btn.style.cssText=`border:none;border-radius:16px;padding:22px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:17px;font-weight:900;color:white;touch-action:manipulation;background:${colors[i]};grid-column:1/-1;`;
+      btn.textContent=opt;
+      btn.addEventListener('touchstart',e=>{e.preventDefault();if(!chaosAnswered){chaosAnswered=true;btn.style.boxShadow='0 0 0 4px white';document.querySelectorAll('#amob button').forEach(b=>b.disabled=true);sendChaosAnswer('vote',{id:myId,name:myName,optIdx:i});}},{passive:false});
+      btn.addEventListener('click',()=>{if(!chaosAnswered){chaosAnswered=true;btn.style.boxShadow='0 0 0 4px white';document.querySelectorAll('#amob button').forEach(b=>b.disabled=true);sendChaosAnswer('vote',{id:myId,name:myName,optIdx:i});}});
+      container.appendChild(btn);
+    });
+  }
+  else if(s.type==='jackpot'){
+    container.style.gridTemplateColumns='1fr';
+    container.innerHTML=`
+      <div style="display:flex;flex-direction:column;gap:12px;width:100%;grid-column:1/-1;">
+        <input type="number" id="jackpot-inp" placeholder="Ta réponse exacte..." style="background:var(--s1);border:2px solid var(--gold);border-radius:12px;padding:14px;color:var(--gold);font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;outline:none;text-align:center;width:100%;">
+        <div style="font-size:11px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;">TA MISE</div>
+        <div style="display:flex;gap:8px;">
+          ${[0,25,50,100].map(pts=>`<button onclick="selectBetChaos(${pts},this)" style="flex:1;padding:12px;border:2px solid var(--border);border-radius:12px;background:var(--s1);color:var(--dim);font-family:'Outfit',sans-serif;font-size:15px;font-weight:900;cursor:pointer;touch-action:manipulation;">${pts}</button>`).join('')}
+        </div>
+        <button style="font-family:'Outfit',sans-serif;font-weight:900;font-size:16px;padding:14px;border-radius:14px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--gold),#e8a020);color:#1a1008;touch-action:manipulation;" onclick="submitJackpot()">MISER 🎰</button>
+      </div>`;
+  }
+}
+
+function sendChaosAnswer(event,data){
+  if(ablyChan)ablyChan.publish(event,data);
+}
+function highlightChaos(btn,container){
+  if(chaosAnswered)return;chaosAnswered=true;
+  container.querySelectorAll('button').forEach(b=>{b.disabled=true;b.style.opacity='.35';});
+  btn.style.opacity='1';btn.style.boxShadow='0 0 0 4px white';
+}
+function submitEstimation(){
+  if(chaosAnswered)return;chaosAnswered=true;
+  const val=parseInt(document.getElementById('pest-slider').value)||0;
+  sendChaosAnswer('estimate',{id:myId,name:myName,value:val});
+  showToast('Réponse envoyée : '+val.toLocaleString()+' ✓');
+  document.querySelector('#amob button').disabled=true;
+}
+function selectBetChaos(pts,btn){
+  myBet=pts;
+  document.querySelectorAll('#amob .bet-like-btn, #amob div button').forEach(b=>b.style.borderColor='var(--border)');
+  btn.style.borderColor='var(--gold)';btn.style.color='var(--gold)';
+}
+function submitJackpot(){
+  if(chaosAnswered)return;chaosAnswered=true;
+  const val=parseInt(document.getElementById('jackpot-inp').value)||0;
+  sendChaosAnswer('jackpot',{id:myId,name:myName,value:val,bet:myBet});
+  showToast('Misé '+myBet+'pts sur '+val+' ✓');
+}
+
+function handleChaosReveal(s){
+  document.getElementById('amob').innerHTML='';
+  // Réutiliser le panneau de reveal quiz
+  const rev={show:true,title:s.reveal?.t||'Réponse !',txt:s.reveal?.d||''};
+  // Afficher dans qscores
+  document.getElementById('qscores').innerHTML=`
+    <div style="background:var(--s2);border:2px solid var(--green);border-radius:14px;padding:14px 16px;text-align:center;width:100%;animation:pop .3s ease;">
+      <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:var(--green);">${rev.title}</div>
+      <div style="font-size:12px;color:var(--dim);margin-top:6px;line-height:1.6;">${rev.txt}</div>
+    </div>`;
+  if(s.players)renderScores(s.players);
 }
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
