@@ -285,7 +285,7 @@ function init(){
   roomCode=Array.from({length:4},()=>chars[Math.floor(Math.random()*chars.length)]).join('');
   document.getElementById('rc').textContent=roomCode;
 
-  const base=location.href.replace('amusoir-chaos.html','amusoir-player.html').split('?')[0];
+  const base=location.href.replace('amusoir-chaos.html','amusoir-chaos-player.html').split('?')[0];
   const playerUrl=base+'?room='+roomCode;
   document.getElementById('rurl').textContent=playerUrl;
 
