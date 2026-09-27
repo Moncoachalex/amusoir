@@ -45,6 +45,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-
 .btn-gold:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(245,197,66,.5);}
 .btn-ghost{background:transparent;border:1px solid #333355;color:var(--dim);}
 .btn-ghost:hover{border-color:var(--dim);color:var(--text);}
+.btn-chaos{background:linear-gradient(135deg,#ff7b00,#ff2d6b);color:white;box-shadow:0 4px 16px rgba(255,123,0,.4);}
+.btn-chaos:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(255,123,0,.6);}
 
 /* BT SETUP */
 #bt-setup{background:radial-gradient(ellipse 80% 50% at 50% -5%,#1a0518 0%,var(--bg) 70%);align-items:center;justify-content:center;gap:13px;padding:22px 20px;overflow-y:auto;}
@@ -219,12 +221,41 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-
       <div class="mbrow">
         <button class="btn btn-pink" onclick="goSetup('bt')">🎵 BLIND TEST</button>
         <button class="btn btn-cyan" onclick="goSetup('quiz')">🧠 QUIZ</button>
+        <button class="btn btn-chaos" onclick="goSetup('chaos')">💥 CHAOS TOTAL</button>
       </div>
     </div>
   </div>
   <div class="ytrow">
     <label>Clé YouTube API :</label>
     <input id="ytkey" type="text" placeholder="AIzaSy..." oninput="saveYTKey(this.value)">
+  </div>
+</div>
+
+<!-- CHAOS SETUP -->
+<div class="screen" id="chaos-setup">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:26px 26px 0;">
+    <div class="ptitle" style="background:linear-gradient(135deg,#ff7b00,#ff2d6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">💥 Chaos Total</div>
+    <button class="btn btn-ghost" onclick="go('lobby')">← Retour</button>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:14px;padding:16px 26px;overflow-y:auto;">
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:18px 24px;max-width:520px;width:100%;">
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.9;color:var(--dim);">
+        <div>🎯 <span style="color:var(--text)">QCM WTF</span> — questions surprenantes, points selon la vitesse</div>
+        <div>🔢 <span style="color:var(--text)">Estimation</span> — slider sur le téléphone, le plus proche gagne</div>
+        <div>🗳️ <span style="color:var(--text)">Vote majoritaire</span> — gagne si tu es dans la majorité</div>
+        <div>🎰 <span style="color:var(--text)">Jackpot</span> — mise des points, réponse exacte = ×3</div>
+      </div>
+    </div>
+    <p class="slbl">NOMBRE DE MANCHES</p>
+    <div class="qcrow">
+      <div class="qcpill on" onclick="setChaosRounds(5,this)">5</div>
+      <div class="qcpill" onclick="setChaosRounds(10,this)">10</div>
+      <div class="qcpill" onclick="setChaosRounds(15,this)">15</div>
+    </div>
+    <div class="stepbtns" style="margin-top:6px;">
+      <button class="btn btn-ghost" onclick="go('lobby')">← Retour</button>
+      <button class="btn btn-chaos" onclick="startChaos()">LANCER 💥</button>
+    </div>
   </div>
 </div>
 
@@ -339,6 +370,24 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-
       <div class="auto-bar" id="auto-bar" style="display:none"><div class="auto-fill" id="auto-fill" style="width:100%"></div></div>
     </div>
     <div class="nrow" id="qnext" style="display:none"><button class="btn btn-cyan" onclick="nextQ()">SUIVANTE →</button></div>
+  </div>
+</div>
+
+<!-- CHAOS GAME -->
+<div class="screen" id="chaos-game">
+  <div class="gtop">
+    <div><div class="rlbl">MANCHE</div><div class="rval"><span id="chaos-qn">1</span>/<span id="chaos-qtot">—</span></div></div>
+    <div class="schips" id="chaos-chips"></div>
+    <button class="btn btn-ghost" style="font-size:11px;padding:6px 12px" onclick="endGame()">FIN</button>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:0 18px;overflow-y:auto;" id="chaos-content"></div>
+  <div id="chaos-reveal-zone" style="display:none;width:100%;display:none;align-items:center;justify-content:center;padding:0 18px;"></div>
+  <div>
+    <div class="tbg"><div class="tfill" id="chaos-tfill" style="width:100%"></div></div>
+    <div class="qtimer-num" id="chaos-tnum">—</div>
+  </div>
+  <div style="display:none;justify-content:center;margin:6px 0;" id="chaos-next-btn">
+    <button class="btn btn-chaos" onclick="nextChaosQuestion()">MANCHE SUIVANTE →</button>
   </div>
 </div>
 
@@ -964,6 +1013,287 @@ const IMG = {
   'tortues': 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzFhMWExYSIvPjxlbGxpcHNlIGN4PSIxMDAiIGN5PSIxMDAiIHJ4PSI1NSIgcnk9IjYwIiBmaWxsPSIjMjI4QjIyIi8+PGVsbGlwc2UgY3g9IjEwMCIgY3k9IjEwMCIgcng9IjQ1IiByeT0iNTAiIGZpbGw9IiMyRThCNTciLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSI2NSIgcj0iMjIiIGZpbGw9IiM4QjczNTUiLz48cmVjdCB4PSI4NSIgeT0iNTUiIHdpZHRoPSIzMCIgaGVpZ2h0PSI2IiBmaWxsPSIjNDE2OUUxIiByeD0iMyIvPjxlbGxpcHNlIGN4PSI4OCIgY3k9IjY4IiByeD0iNyIgcnk9IjkiIGZpbGw9IndoaXRlIi8+PGVsbGlwc2UgY3g9IjExMiIgY3k9IjY4IiByeD0iNyIgcnk9IjkiIGZpbGw9IndoaXRlIi8+PGNpcmNsZSBjeD0iODgiIGN5PSI3MCIgcj0iNCIgZmlsbD0iIzFhMWExYSIvPjxjaXJjbGUgY3g9IjExMiIgY3k9IjcwIiByPSI0IiBmaWxsPSIjMWExYTFhIi8+PHRleHQgeD0iMTAwIiB5PSIxOTgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjayIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzMyQ0QzMiI+VE9SVFVFUyBOSU5KQTwvdGV4dD48L3N2Zz4=',
 };
 
+
+// ══════════════════════════════════════
+// CHAOS TOTAL — Variables
+// ══════════════════════════════════════
+let chaosQuestions=[], chaosIdx=0, chaosRoundCount=5;
+let chaosTimer=null, chaosTimeLeft=0, chaosMaxTime=20;
+let chaosPlayerAnswers={}, chaosPlayerEstimates={}, chaosPlayerVotes={};
+let chaosRevealDone=false;
+
+const CHAOS_QUESTIONS = [
+  // QCM WTF
+  {type:'mcq',q:"Quel animal fait des crottes cubiques ?",a:0,c:["Le wombat","Le koala","Le panda","Le blaireau"],pts:1000,reveal:{t:"Le wombat !",d:"Ses intestins compriment et façonnent ses déjections jusqu'à leur donner cette forme cubique unique au monde."}},
+  {type:'mcq',q:"Combien de cœurs possède une pieuvre ?",a:2,c:["1","2","3","5"],pts:1000,reveal:{t:"3 cœurs !",d:"Deux cœurs branchiaux pompent le sang vers les branchies, un cœur systémique le distribue au reste du corps."}},
+  {type:'mcq',q:"Quelle est la couleur du sang des pieuvres ?",a:1,c:["Rouge","Bleu","Vert","Incolore"],pts:1000,reveal:{t:"Bleu !",d:"Leur sang contient de l'hémocyanine (cuivre) au lieu de l'hémoglobine (fer), ce qui lui donne cette couleur bleue."}},
+  {type:'mcq',q:"Le miel peut-il se conserver indéfiniment ?",a:0,c:["Oui","Non","Seulement 100 ans","10 ans max"],pts:1000,reveal:{t:"Oui, indéfiniment !",d:"Du miel vieux de 3000 ans a été retrouvé dans des tombes égyptiennes et était encore consommable."}},
+  {type:'mcq',q:"Combien de temps un être humain peut survivre sans dormir (record) ?",a:2,c:["3 jours","7 jours","11 jours","30 jours"],pts:1000,reveal:{t:"11 jours !",d:"Randy Gardner en 1964 est resté éveillé 264 heures (11 jours) sous surveillance médicale."}},
+  {type:'mcq',q:"Quelle est la vitesse d'un éternuement ?",a:1,c:["50 km/h","160 km/h","300 km/h","500 km/h"],pts:1000,reveal:{t:"160 km/h !",d:"Voire plus selon les études — certaines mesurent jusqu'à 300 km/h pour les plus violents."}},
+  {type:'mcq',q:"Quelle est la seule lettre qui n'apparaît dans aucun nom d'État américain ?",a:3,c:["X","Z","J","Q"],pts:1000,reveal:{t:"Q !",d:"Toutes les autres lettres de l'alphabet apparaissent dans au moins un nom d'État américain, sauf le Q."}},
+  {type:'mcq',q:"Combien de muscles faut-il pour sourire ?",a:0,c:["12","17","43","72"],pts:1000,reveal:{t:"12 muscles !",d:"Contre 11 pour froncer les sourcils — contrairement à l'idée reçue, sourire n'est pas plus fatigant."}},
+  {type:'mcq',q:"Quel pays possède le plus de lacs au monde ?",a:1,c:["Russie","Canada","Finlande","États-Unis"],pts:1000,reveal:{t:"Canada !",d:"Le Canada possède environ 60% des lacs d'eau douce de la planète, soit plus de 2 millions de lacs."}},
+  {type:'mcq',q:"Quelle est la chose la plus vendue dans le monde chaque année ?",a:2,c:["Coca-Cola","Smartphones","Cartes SIM","Briques LEGO"],pts:1000,reveal:{t:"Briques LEGO !",d:"LEGO produit environ 306 milliards de briques par an, soit 36 millions à l'heure — plus que tout autre fabricant de jouets."}},
+  {type:'mcq',q:"Un crocodile peut-il tirer la langue ?",a:1,c:["Oui","Non","Seulement sous l'eau","Seulement les femelles"],pts:1000,reveal:{t:"Non !",d:"La langue du crocodile est attachée au fond de sa gueule par une membrane, il lui est impossible de la tirer."}},
+  {type:'mcq',q:"Quelle est la probabilité d'être frappé par la foudre deux fois dans sa vie ?",a:2,c:["1 sur 1 000 000","1 sur 100 000","1 sur 9","1 sur 1 000"],pts:1000,reveal:{t:"1 sur 9 !",d:"Roy Sullivan, garde forestier américain, a été frappé par la foudre 7 fois au cours de sa vie."}},
+  {type:'mcq',q:"Combien de dents possède un escargot ?",a:3,c:["0","8","50","Plus de 14 000"],pts:1000,reveal:{t:"Plus de 14 000 !",d:"Les dents microscopiques de l'escargot sont disposées sur une langue râpeuse appelée radula."}},
+  {type:'mcq',q:"Quelle planète tourne dans le sens inverse des autres ?",a:1,c:["Mars","Vénus","Saturne","Mercure"],pts:1000,reveal:{t:"Vénus !",d:"Sur Vénus, le soleil se lève à l'ouest et se couche à l'est — en plus sa rotation est extrêmement lente."}},
+  {type:'mcq',q:"Quel est le son le plus fort jamais produit naturellement sur Terre ?",a:2,c:["La chute de Tunguska","Le tremblement de terre de 1960","L'éruption du Krakatoa","La chute d'une météorite"],pts:1000,reveal:{t:"L'éruption du Krakatoa (1883) !",d:"Entendu à plus de 4 800 km, il a fait le tour de la Terre 4 fois et a été entendu depuis l'Australie."}},
+
+  // ESTIMATION
+  {type:'estimation',q:"Combien de kilomètres de vaisseaux sanguins dans un corps humain ?",correct:100000,unit:"km",min:0,max:200000,reveal:{t:"≈ 100 000 km",d:"Mis bout à bout, ils feraient 2,5 fois le tour de la Terre."}},
+  {type:'estimation',q:"Combien de fois par jour un adulte cligne des yeux en moyenne ?",correct:15000,unit:"fois",min:0,max:50000,reveal:{t:"≈ 15 000 fois",d:"Soit environ 10 à 20 fois par minute, ce qui représente 30 minutes de fermeture par jour."}},
+  {type:'estimation',q:"Combien de bactéries vivent sur votre téléphone par cm² ?",correct:25000,unit:"bactéries/cm²",min:0,max:100000,reveal:{t:"≈ 25 000 bactéries/cm²",d:"Votre téléphone est 10 fois plus sale qu'une lunette de toilettes selon certaines études."}},
+  {type:'estimation',q:"Combien de secondes dure une journée de 24h ?",correct:86400,unit:"secondes",min:0,max:200000,reveal:{t:"86 400 secondes",d:"24 × 60 × 60 = 86 400. Maintenant tu le sauras toujours."}},
+  {type:'estimation',q:"Combien de litres de salive produit-on par an ?",correct:730,unit:"litres",min:0,max:2000,reveal:{t:"≈ 730 litres",d:"Soit environ 2 litres par jour — assez pour remplir une baignoire en un an."}},
+
+  // VOTE MAJORITÉ
+  {type:'majority',q:"L'ananas sur une pizza ?",opts:["Excellente idée 🍍","Crime gastronomique 🚫"],reveal:{t:"Le débat du siècle !",d:"45% des Français sont pour, 55% contre selon un sondage IFOP 2022. La réponse correcte ? Celle de la majorité ici !"}},
+  {type:'majority',q:"Tu révèles un secret gênant pour sauver ton meilleur ami ?",opts:["Je révèle tout 🗣️","Je garde le secret 🤫"],reveal:{t:"Question de loyauté !",d:"Pas de bonne réponse — mais la majorité est gagnante !"}},
+  {type:'majority',q:"Dormir avec des chaussettes ?",opts:["Oui, c'est parfait 🧦","Non, c'est barbare ❌"],reveal:{t:"40% des Français dorment avec des chaussettes !",d:"La majorité mondiale dit non — mais les Nordiques disent oui."}},
+  {type:'majority',q:"Tu peux te permettre une seule chose : laquelle ?",opts:["Voyager toute sa vie 🌍","Maison + voiture + stabilité 🏠"],reveal:{t:"Question de valeurs !",d:"Les Millennials choisissent à 60% le voyage. Les générations précédentes choisissent la stabilité."}},
+  {type:'majority',q:"Si tu devais perdre un sens, lequel sacrifierais-tu ?",opts:["L'odorat 👃","Le goût 👅"],reveal:{t:"La plupart sacrifient l'odorat !",d:"80% des personnes choisissent de perdre l'odorat plutôt que le goût. Mais les deux sont liés..."}},
+
+  // JACKPOT NUMÉRIQUE
+  {type:'jackpot',q:"Combien de secondes exactement dans 24h ?",correct:86400,unit:"secondes",reveal:{t:"86 400 secondes !",d:"24 × 60 × 60. Le jackpot pour la réponse exacte !"}},
+  {type:'jackpot',q:"En quelle année a été inventé le World Wide Web ?",correct:1991,unit:"",reveal:{t:"1991 !",d:"Tim Berners-Lee l'a mis en ligne publiquement le 6 août 1991 depuis le CERN."}},
+  {type:'jackpot',q:"Combien y a-t-il d'os dans la main humaine ?",correct:27,unit:"os",reveal:{t:"27 os !",d:"8 os du carpe + 5 métacarpes + 14 phalanges = 27 os dans chaque main."}},
+];
+
+function setChaosRounds(n,el){
+  chaosRoundCount=n;
+  document.querySelectorAll('#chaos-setup .qcpill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function startChaos(){
+  const pool=[...CHAOS_QUESTIONS];
+  shuffle(pool);
+  chaosQuestions=pool.slice(0,Math.min(chaosRoundCount,pool.length));
+  chaosIdx=0;
+  Object.values(players).forEach(p=>p.score=0);
+  go('bt-game'); // Réutilise l'écran bt-game comme conteneur
+  // On va plutôt créer un écran dédié — utilise quiz-game
+  go('chaos-game');
+  renderChips('chaos-chips');
+  broadcast('state',{phase:'chaos-start',players:getPlayers()});
+  loadChaosQuestion();
+}
+
+function loadChaosQuestion(){
+  chaosRevealDone=false;chaosPlayerAnswers={};chaosPlayerEstimates={};chaosPlayerVotes={};
+  const q=chaosQuestions[chaosIdx];
+  document.getElementById('chaos-qn').textContent=chaosIdx+1;
+  document.getElementById('chaos-qtot').textContent=chaosQuestions.length;
+  document.getElementById('chaos-next-btn').style.display='none';
+  document.getElementById('chaos-reveal-zone').style.display='none';
+  document.getElementById('chaos-tfill').style.width='100%';
+
+  const content=document.getElementById('chaos-content');
+  content.innerHTML='';
+
+  // Badge type
+  const types={mcq:{l:'QCM',c:'#ff7b00'},estimation:{l:'ESTIMATION',c:'#00e5ff'},majority:{l:'VOTE',c:'#c77dff'},jackpot:{l:'🎰 JACKPOT',c:'#f5c542'}};
+  const t=types[q.type]||{l:'?',c:'#fff'};
+  content.innerHTML=`
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:18px 28px;width:100%;max-width:900px;text-align:center;">
+      <div style="display:inline-block;padding:3px 12px;border-radius:10px;font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;background:${t.c}22;color:${t.c};border:1px solid ${t.c}">${t.l}</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:clamp(18px,2.5vw,32px);font-weight:900;line-height:1.3;">${q.q}</div>
+    </div>`;
+
+  if(q.type==='mcq') renderChaosMCQ(q,content);
+  else if(q.type==='estimation') renderChaosEstim(q,content);
+  else if(q.type==='majority') renderChaosMajority(q,content);
+  else if(q.type==='jackpot') renderChaosJackpot(q,content);
+
+  broadcast('state',{phase:'chaos-question',type:q.type,q:q.q,opts:q.opts||q.c||null,min:q.min,max:q.max,unit:q.unit,idx:chaosIdx,total:chaosQuestions.length});
+  startChaosTimer(q.type==='estimation'||q.type==='jackpot'?30:q.type==='majority'?15:20);
+}
+
+function startChaosTimer(t){
+  chaosTimeLeft=t;chaosMaxTime=t;
+  document.getElementById('chaos-tnum').textContent=t;
+  clearInterval(chaosTimer);
+  chaosTimer=setInterval(()=>{
+    chaosTimeLeft--;
+    document.getElementById('chaos-tnum').textContent=chaosTimeLeft;
+    document.getElementById('chaos-tfill').style.width=(chaosTimeLeft/chaosMaxTime*100)+'%';
+    if(chaosTimeLeft<=0){clearInterval(chaosTimer);if(!chaosRevealDone)revealChaosQ();}
+  },1000);
+}
+
+function renderChaosMCQ(q,container){
+  const colors=['linear-gradient(135deg,#e63946,#c1121f)','linear-gradient(135deg,#2196f3,#0d47a1)','linear-gradient(135deg,#43a047,#1b5e20)','linear-gradient(135deg,#ffc107,#e65100)'];
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:900px;';
+  q.c.forEach((a,i)=>{
+    const btn=document.createElement('button');
+    btn.style.cssText=`border:none;border-radius:18px;padding:18px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:clamp(13px,1.5vw,19px);font-weight:800;color:white;min-height:75px;background:${colors[i]};box-shadow:0 6px 0 rgba(0,0,0,.3);transition:.15s;`;
+    btn.textContent=a;btn.dataset.i=i;
+    btn.onclick=()=>revealChaosQ();
+    container.appendChild(grid);
+    grid.appendChild(btn);
+  });
+  if(!container.contains(grid))container.appendChild(grid);
+}
+
+function renderChaosEstim(q,container){
+  const mid=Math.round(((q.min||0)+(q.max||100000))/2);
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:600px;';
+  div.innerHTML=`
+    <div style="font-family:'Outfit',sans-serif;font-size:48px;font-weight:900;color:var(--cyan);" id="chaos-estim-display">${mid.toLocaleString()}</div>
+    <div style="font-size:13px;color:var(--dim);">${q.unit||''}</div>
+    <div id="chaos-estim-players" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;"></div>`;
+  container.appendChild(div);
+  updateChaosEstimPlayers();
+}
+
+function renderChaosMajority(q,container){
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;gap:16px;justify-content:center;flex-wrap:wrap;width:100%;max-width:900px;';
+  q.opts.forEach((o,i)=>{
+    const colors=['var(--cyan)','var(--pink)'];
+    div.innerHTML+=`<div style="flex:1;min-width:200px;max-width:340px;padding:20px;border-radius:20px;text-align:center;font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;border:3px solid ${colors[i]};color:${colors[i]};background:var(--s1);">
+      <div>${o}</div>
+      <div style="font-size:44px;margin-top:8px;" id="chaos-vc-${i}">0</div>
+      <div style="font-size:13px;opacity:.7;" id="chaos-vp-${i}">0%</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:8px;" id="chaos-vv-${i}"></div>
+    </div>`;
+  });
+  container.appendChild(div);
+}
+
+function renderChaosJackpot(q,container){
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:600px;';
+  div.innerHTML=`
+    <div style="font-size:13px;color:var(--dim);text-align:center;">Les joueurs tapent leur réponse et misent des points sur leur téléphone</div>
+    <div id="chaos-jbets" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;"></div>`;
+  container.appendChild(div);
+  updateChaosJackpotBets();
+}
+
+function onAnswer(d){
+  if(chaosRevealDone)return;
+  const q=chaosQuestions[chaosIdx];if(!players[d.id])return;
+  chaosPlayerAnswers[d.id]=d.answerIdx;
+  if(d.answerIdx===q.a){
+    const bonus=Math.round(q.pts*(chaosTimeLeft/chaosMaxTime));
+    players[d.id].score+=bonus;
+    showToast('✓ '+players[d.id].name+' +'+bonus+'pts');
+    renderChips('chaos-chips');
+  }
+  if(Object.keys(chaosPlayerAnswers).length>=Object.keys(players).length)revealChaosQ();
+}
+
+function onEstimate(d){
+  if(chaosRevealDone||!players[d.id])return;
+  chaosPlayerEstimates[d.id]=d.value;
+  updateChaosEstimPlayers();
+  if(Object.keys(chaosPlayerEstimates).length>=Object.keys(players).length)revealChaosQ();
+}
+
+function onVote(d){
+  if(chaosRevealDone||!players[d.id])return;
+  chaosPlayerVotes[d.id]=d.optIdx;
+  updateChaosVotes();
+  if(Object.keys(chaosPlayerVotes).length>=Object.keys(players).length)revealChaosQ();
+}
+
+function onJackpot(d){
+  if(chaosRevealDone||!players[d.id])return;
+  chaosPlayerEstimates[d.id]={value:d.value,bet:d.bet};
+  updateChaosJackpotBets();
+  if(Object.keys(chaosPlayerEstimates).length>=Object.keys(players).length)revealChaosQ();
+}
+
+function updateChaosEstimPlayers(){
+  const el=document.getElementById('chaos-estim-players');if(!el)return;
+  el.innerHTML=Object.values(players).map(p=>`
+    <div style="background:var(--s1);border:1px solid ${p.color}44;border-radius:10px;padding:8px 14px;text-align:center;min-width:90px;">
+      <div style="font-size:11px;color:${p.color};">${p.name}</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:17px;font-weight:900;color:${chaosPlayerEstimates[p.id]!==undefined?'var(--green)':'var(--dim)'};">${chaosPlayerEstimates[p.id]!==undefined?chaosPlayerEstimates[p.id].toLocaleString():'⏳'}</div>
+    </div>`).join('');
+}
+
+function updateChaosVotes(){
+  const q=chaosQuestions[chaosIdx];if(!q||q.type!=='majority')return;
+  const counts=[0,0];
+  Object.values(chaosPlayerVotes).forEach(v=>counts[v]++);
+  const total=Math.max(Object.values(chaosPlayerVotes).length,1);
+  counts.forEach((c,i)=>{
+    const vc=document.getElementById('chaos-vc-'+i);
+    const vp=document.getElementById('chaos-vp-'+i);
+    const vv=document.getElementById('chaos-vv-'+i);
+    if(vc)vc.textContent=c;
+    if(vp)vp.textContent=Math.round(c/total*100)+'%';
+    if(vv)vv.innerHTML=Object.entries(chaosPlayerVotes).filter(([,v])=>v===i).map(([id])=>`<span style="padding:2px 8px;border-radius:10px;font-size:10px;background:rgba(255,255,255,.07);color:${players[id]?.color||'#fff'}">${players[id]?.name||''}</span>`).join('');
+  });
+}
+
+function updateChaosJackpotBets(){
+  const el=document.getElementById('chaos-jbets');if(!el)return;
+  el.innerHTML=Object.values(players).map(p=>{
+    const e=chaosPlayerEstimates[p.id];
+    return`<div style="background:var(--s1);border:1px solid ${p.color}33;border-radius:12px;padding:10px 14px;text-align:center;min-width:100px;">
+      <div style="font-size:12px;color:${p.color};">${p.name}</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;">${e?e.value:'-'}</div>
+      <div style="font-size:11px;color:var(--gold);">${e?'Mise: '+e.bet+'pts':'⏳'}</div>
+    </div>`;
+  }).join('');
+}
+
+function revealChaosQ(){
+  chaosRevealDone=true;clearInterval(chaosTimer);
+  const q=chaosQuestions[chaosIdx];
+
+  if(q.type==='estimation'){
+    const correct=q.correct;
+    const vals=Object.values(chaosPlayerEstimates);
+    const maxDist=Math.max(...vals.map(v=>Math.abs(v-correct)),1);
+    Object.entries(chaosPlayerEstimates).forEach(([id,val])=>{
+      const dist=Math.abs(val-correct);
+      const pts=Math.round(1500*(1-dist/maxDist));
+      if(pts>0&&players[id])players[id].score+=pts;
+    });
+  } else if(q.type==='majority'){
+    const counts=[0,0];
+    Object.values(chaosPlayerVotes).forEach(v=>counts[v]++);
+    const winner=counts[0]>counts[1]?0:counts[1]>counts[0]?1:-1;
+    Object.entries(chaosPlayerVotes).forEach(([id,v])=>{
+      if(v===winner&&players[id])players[id].score+=1000;
+    });
+    updateChaosVotes();
+  } else if(q.type==='jackpot'){
+    const correct=q.correct;
+    Object.entries(chaosPlayerEstimates).forEach(([id,e])=>{
+      if(!players[id])return;
+      if(parseInt(e.value)===correct){players[id].score+=e.bet*3;showToast('🎰 JACKPOT ! '+players[id].name+' +'+e.bet*3+'pts !');}
+      else players[id].score-=e.bet;
+    });
+  }
+
+  renderChips('chaos-chips');
+  broadcast('state',{phase:'chaos-reveal',type:q.type,correctIdx:q.a,correct:q.correct,reveal:q.reveal,players:getPlayers()});
+
+  const revZone=document.getElementById('chaos-reveal-zone');
+  revZone.style.display='block';
+  revZone.innerHTML=`
+    <div style="background:var(--s2);border:2px solid var(--green);border-radius:18px;padding:18px 28px;text-align:center;width:100%;max-width:600px;animation:pop .3s ease;">
+      <div style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;color:var(--green);">${q.reveal.t}</div>
+      <div style="font-size:13px;color:var(--dim);margin-top:8px;line-height:1.7;">${q.reveal.d}</div>
+    </div>`;
+
+  document.getElementById('chaos-next-btn').style.display='flex';
+}
+
+function nextChaosQuestion(){
+  chaosIdx++;
+  if(chaosIdx>=chaosQuestions.length){endGame();return;}
+  loadChaosQuestion();
+}
+
 function init(){
   // Code salle : toujours 4 caractères, sans ambiguïté O/0 I/1
   const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -1027,6 +1357,9 @@ function connectAbly(){
       ablyChan.subscribe('join',msg=>onJoin(msg.data));
       ablyChan.subscribe('buzz',msg=>onBuzz(msg.data));
       ablyChan.subscribe('answer',msg=>onPlayerAnswer(msg.data));
+      ablyChan.subscribe('estimate',msg=>onEstimate(msg.data));
+      ablyChan.subscribe('vote',msg=>onVote(msg.data));
+      ablyChan.subscribe('jackpot',msg=>onJackpot(msg.data));
     });
     ably.connection.on('disconnected',()=>{document.getElementById('sled').className='sled err';document.getElementById('stxt').textContent='Reconnexion...';});
     ably.connection.on('failed',()=>{document.getElementById('sled').className='sled err';document.getElementById('stxt').textContent='Erreur réseau';});
@@ -1066,7 +1399,11 @@ function renderPlist(){
   el.innerHTML=arr.length?arr.map(p=>`<div class="pentry"><div class="pdot" style="background:${p.color}"></div>${p.name}</div>`).join(''):'<div class="waiting">En attente de joueurs...</div>';
 }
 function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
-function goSetup(m){go(m==='bt'?'bt-setup':'quiz-setup');if(m==='quiz')updateMemInfo();}
+function goSetup(m){
+  if(m==='bt'){go('bt-setup');}
+  else if(m==='quiz'){go('quiz-setup');updateMemInfo();}
+  else if(m==='chaos'){go('chaos-setup');}
+}
 
 // ══════════════════════════════════════
 // YOUTUBE SEARCH
