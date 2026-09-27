@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMUSOIR — CHAOS TOTAL</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="ably.min-1.js"></script>
+<style>
+:root{--bg:#07070f;--s1:#0f0f1c;--s2:#16162a;--gold:#f5c542;--cyan:#00e5ff;--pink:#ff2d6b;--green:#00f5a0;--orange:#ff7b00;--purple:#c77dff;--text:#f0f0ff;--dim:#666688;--border:rgba(255,255,255,0.07);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;overflow:hidden;}
+.screen{display:none;width:100vw;height:100vh;flex-direction:column;}
+.screen.active{display:flex;}
+
+/* LOBBY */
+#lobby{background:radial-gradient(ellipse 80% 60% at 50% -10%,#1a0a35 0%,var(--bg) 70%);align-items:center;justify-content:center;gap:22px;}
+.logo{font-family:'Outfit',sans-serif;font-size:clamp(48px,7vw,90px);font-weight:900;background:linear-gradient(135deg,var(--orange) 0%,var(--pink) 40%,var(--purple) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;}
+.logo-sub{font-size:13px;letter-spacing:6px;color:var(--orange);text-transform:uppercase;text-align:center;margin-top:2px;}
+.lobby-grid{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;justify-content:center;}
+.panel{background:var(--s1);border:1px solid var(--border);border-radius:18px;padding:20px;}
+.panel h3{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--dim);margin-bottom:11px;}
+#qr-box{background:white;padding:8px;border-radius:10px;width:164px;height:164px;display:flex;align-items:center;justify-content:center;}
+.room-code{font-family:'Outfit',sans-serif;font-size:44px;font-weight:900;color:var(--gold);letter-spacing:8px;text-align:center;margin-top:8px;}
+.room-url{font-size:9px;color:#333355;text-align:center;margin-top:4px;word-break:break-all;}
+.plist{display:flex;flex-direction:column;gap:7px;min-height:80px;min-width:230px;}
+.pentry{display:flex;align-items:center;gap:9px;padding:8px 12px;background:var(--s2);border-radius:10px;animation:popIn .3s ease;}
+@keyframes popIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+.pdot{width:9px;height:9px;border-radius:50%;}
+.waiting{color:#333355;font-size:12px;font-style:italic;}
+.mbrow{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin-top:10px;}
+.btn{font-family:'Outfit',sans-serif;font-weight:700;padding:11px 22px;border-radius:12px;border:none;cursor:pointer;transition:.2s;font-size:14px;}
+.btn-chaos{background:linear-gradient(135deg,var(--orange),var(--pink));color:white;box-shadow:0 4px 20px rgba(255,123,0,.4);font-size:16px;padding:14px 28px;}
+.btn-chaos:hover{transform:translateY(-2px);box-shadow:0 6px 30px rgba(255,123,0,.6);}
+.btn-ghost{background:transparent;border:1px solid #333355;color:var(--dim);}
+.btn-ghost:hover{border-color:var(--dim);color:var(--text);}
+
+/* STATUS */
+.sbar{position:fixed;top:10px;right:14px;font-size:11px;padding:4px 11px;border-radius:18px;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;gap:5px;z-index:50;}
+.sled{width:7px;height:7px;border-radius:50%;background:#444;}
+.sled.ok{background:var(--green);box-shadow:0 0 6px var(--green);}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--border);padding:10px 20px;border-radius:10px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;z-index:1000;}
+.toast.show{opacity:1;}
+
+/* SETUP */
+#setup{background:radial-gradient(ellipse 80% 50% at 50% -5%,#1a0818 0%,var(--bg) 70%);align-items:center;justify-content:center;gap:16px;padding:20px;}
+.ptitle{font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,54px);font-weight:900;background:linear-gradient(135deg,var(--orange),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.setup-info{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:20px 28px;max-width:500px;text-align:center;}
+.setup-info p{font-size:13px;color:var(--dim);line-height:1.8;}
+.setup-info p span{color:var(--text);}
+.diff-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.diff-pill{padding:8px 16px;border-radius:20px;border:2px solid var(--border);background:var(--s1);color:var(--dim);font-size:12px;cursor:pointer;transition:.2s;}
+.diff-pill.on{border-color:var(--orange);color:var(--orange);background:rgba(255,123,0,.1);}
+.slbl{font-size:10px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;}
+
+/* GAME SCREEN */
+#game{background:var(--bg);padding:14px 22px;gap:10px;position:relative;}
+.gtop{display:flex;justify-content:space-between;align-items:center;width:100%;}
+.rlbl{font-size:10px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;}
+.rval{font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;color:var(--gold);}
+.schips{display:flex;gap:7px;flex-wrap:wrap;}
+.chip{display:flex;align-items:center;gap:7px;padding:4px 11px;border-radius:18px;border:1px solid var(--border);background:var(--s1);font-size:12px;}
+.cdot{width:7px;height:7px;border-radius:50%;}
+.cpts{font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;}
+.tbg{width:100%;height:5px;background:var(--s2);border-radius:3px;overflow:hidden;}
+.tfill{height:100%;background:linear-gradient(90deg,var(--green),var(--gold),var(--pink));border-radius:3px;transition:width 1s linear;}
+.tnum{font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:var(--gold);text-align:center;margin-top:3px;}
+
+/* TYPE : MULTIPLE CHOICE */
+.qcard{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:18px 28px;width:100%;max-width:960px;text-align:center;}
+.qtype-badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;}
+.qtxt{font-family:'Outfit',sans-serif;font-size:clamp(18px,2.6vw,34px);font-weight:900;line-height:1.3;}
+.agrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:960px;}
+.abtn{border:none;border-radius:18px;padding:18px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:clamp(14px,1.6vw,20px);font-weight:800;color:white;text-shadow:0 2px 4px rgba(0,0,0,.4);box-shadow:0 6px 0 rgba(0,0,0,.3);min-height:80px;animation:tileIn .3s cubic-bezier(.34,1.56,.64,1) both;}
+.abtn:nth-child(1){background:linear-gradient(135deg,#e63946,#c1121f);animation-delay:.05s;}
+.abtn:nth-child(2){background:linear-gradient(135deg,#2196f3,#0d47a1);animation-delay:.1s;}
+.abtn:nth-child(3){background:linear-gradient(135deg,#43a047,#1b5e20);animation-delay:.15s;}
+.abtn:nth-child(4){background:linear-gradient(135deg,#ffc107,#e65100);animation-delay:.2s;}
+@keyframes tileIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.abtn.right{box-shadow:0 0 0 5px white,0 0 30px rgba(255,255,255,.5)!important;transform:scale(1.04)!important;}
+.abtn.wrong{opacity:.25;}
+.abtn:disabled{cursor:not-allowed;}
+
+/* TYPE : ZOOM IMAGE */
+.zoom-wrap{position:relative;width:100%;max-width:500px;height:280px;overflow:hidden;border-radius:22px;border:2px solid var(--orange);margin:0 auto;}
+.zoom-img{width:100%;height:100%;object-fit:cover;transition:transform 10s linear;}
+.zoom-img.zooming{transform:scale(1);}
+.zoom-img.start{transform:scale(4);}
+.zoom-hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);padding:6px 14px;border-radius:20px;font-size:12px;color:var(--dim);}
+.buzz-bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%;}
+.buzz-player{padding:12px 20px;border-radius:12px;border:2px solid transparent;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;background:var(--s1);}
+.buzz-player:hover{transform:translateY(-2px);}
+.buzz-player.buzzed{animation:buzzPop .3s ease;}
+@keyframes buzzPop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+/* TYPE : ESTIMATION */
+.estim-wrap{width:100%;max-width:600px;display:flex;flex-direction:column;gap:14px;align-items:center;}
+.estim-val{font-family:'Outfit',sans-serif;font-size:52px;font-weight:900;color:var(--cyan);}
+.estim-unit{font-size:14px;color:var(--dim);margin-top:-8px;}
+.estim-slider{width:100%;-webkit-appearance:none;height:8px;border-radius:4px;background:var(--s2);outline:none;}
+.estim-slider::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--cyan);cursor:pointer;box-shadow:0 0 12px var(--cyan);}
+.estim-players{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+.estim-pcard{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:8px 14px;text-align:center;min-width:100px;}
+.estim-pname{font-size:12px;color:var(--dim);}
+.estim-pval{font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;}
+.estim-pval.submitted{color:var(--green);}
+
+/* TYPE : VOTE MAJORITY */
+.vote-wrap{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;width:100%;}
+.vote-opt{flex:1;min-width:200px;max-width:340px;padding:24px;border-radius:20px;text-align:center;font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;border:3px solid transparent;background:var(--s1);transition:.3s;}
+.vote-opt:nth-child(1){border-color:var(--cyan);color:var(--cyan);}
+.vote-opt:nth-child(2){border-color:var(--pink);color:var(--pink);}
+.vote-count{font-size:48px;font-weight:900;margin-top:10px;}
+.vote-pct{font-size:14px;opacity:.7;margin-top:4px;}
+.vote-voters{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:10px;}
+.vote-chip{padding:3px 10px;border-radius:12px;font-size:11px;background:rgba(255,255,255,.07);}
+
+/* TYPE : JACKPOT */
+.jackpot-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;max-width:600px;}
+.jackpot-val{font-family:'Outfit',sans-serif;font-size:64px;font-weight:900;color:var(--gold);text-shadow:0 0 30px rgba(245,197,66,.5);}
+.jackpot-unit{font-size:14px;color:var(--dim);}
+.jackpot-bets{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+.jbet-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:10px 16px;text-align:center;min-width:110px;}
+.jbet-name{font-size:12px;color:var(--dim);}
+.jbet-val{font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;}
+.jbet-bet{font-size:11px;margin-top:3px;}
+
+/* REVEAL */
+.reveal-card{background:var(--s2);border:2px solid var(--green);border-radius:18px;padding:20px 28px;text-align:center;width:100%;max-width:600px;animation:pop .4s ease;}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.reveal-title{font-family:'Outfit',sans-serif;font-size:28px;font-weight:900;color:var(--green);}
+.reveal-text{font-size:13px;color:var(--dim);margin-top:8px;line-height:1.7;}
+.pts-awarded{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px;}
+.pts-chip{padding:6px 14px;border-radius:14px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:900;}
+
+/* SCOREBOARD */
+#scoreboard{background:radial-gradient(ellipse 80% 50% at 50% -5%,#100a2a 0%,var(--bg) 70%);align-items:center;padding:16px 20px;overflow-y:auto;gap:4px;}
+.prow{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:10px 16px;display:flex;align-items:center;gap:12px;animation:slr .4s ease both;width:100%;max-width:600px;}
+@keyframes slr{from{transform:translateX(-20px);opacity:0}to{transform:translateX(0);opacity:1}}
+.prow.p1{border-color:var(--gold);}
+.prank{font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;min-width:36px;}
+.pname{font-family:'Outfit',sans-serif;font-size:17px;font-weight:700;flex:1;}
+.pbw{flex:2;height:5px;background:var(--s2);border-radius:3px;overflow:hidden;}
+.pb{height:100%;border-radius:3px;}
+.ppts{font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;min-width:70px;text-align:right;}
+
+/* CONFETTI */
+.cf{position:fixed;border-radius:2px;animation:cff linear both;pointer-events:none;z-index:9998;}
+@keyframes cff{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+</style>
+</head>
+<body>
+<div class="sbar"><div class="sled" id="sled"></div><span id="stxt">Connexion...</span></div>
+<div class="toast" id="toast"></div>
+
+<!-- LOBBY -->
+<div class="screen active" id="lobby">
+  <div style="text-align:center">
+    <div class="logo">💥 CHAOS TOTAL</div>
+    <div class="logo-sub">Le quiz qui ne ressemble à rien</div>
+  </div>
+  <div class="lobby-grid">
+    <div class="panel">
+      <h3>Rejoindre</h3>
+      <div id="qr-box"><span style="color:#999;font-size:12px;">...</span></div>
+      <div class="room-code" id="rc">——</div>
+      <div class="room-url" id="rurl"></div>
+    </div>
+    <div class="panel">
+      <h3>Joueurs (<span id="pcnt">0</span>)</h3>
+      <div class="plist" id="plist"><div class="waiting">En attente...</div></div>
+      <div class="mbrow">
+        <button class="btn btn-chaos" onclick="goSetup()">💥 LANCER</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div class="screen" id="setup">
+  <div class="ptitle">💥 CHAOS TOTAL</div>
+  <div class="setup-info">
+    <p>🎯 <span>QCM classiques</span> — mais avec des questions WTF</p>
+    <p>🔍 <span>Zoom progressif</span> — reconnaître une image qui se dévoile</p>
+    <p>🔢 <span>Estimation</span> — le plus proche gagne</p>
+    <p>🗳️ <span>Vote majoritaire</span> — gagne si tu es dans la majorité</p>
+    <p>🎰 <span>Jackpot</span> — mise des points sur ta réponse exacte</p>
+  </div>
+  <p class="slbl">Nombre de manches</p>
+  <div class="diff-row">
+    <div class="diff-pill on" onclick="setRounds(5,this)">5 manches</div>
+    <div class="diff-pill" onclick="setRounds(10,this)">10 manches</div>
+    <div class="diff-pill" onclick="setRounds(15,this)">15 manches</div>
+  </div>
+  <div style="display:flex;gap:10px">
+    <button class="btn btn-ghost" onclick="go('lobby')">← Retour</button>
+    <button class="btn btn-chaos" onclick="startGame()">LANCER 💥</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="game">
+  <div class="gtop">
+    <div><div class="rlbl">MANCHE</div><div class="rval"><span id="qn">1</span>/<span id="qtot">—</span></div></div>
+    <div class="schips" id="schips"></div>
+    <button class="btn btn-ghost" style="font-size:11px;padding:6px 12px" onclick="endGame()">FIN</button>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:0 18px;overflow-y:auto;" id="game-content"></div>
+  <div>
+    <div class="tbg"><div class="tfill" id="tfill" style="width:100%"></div></div>
+    <div class="tnum" id="tnum">—</div>
+  </div>
+  <div style="display:flex;justify-content:center;margin:8px 0;display:none" id="btn-next">
+    <button class="btn btn-chaos" onclick="nextQuestion()">MANCHE SUIVANTE →</button>
+  </div>
+</div>
+
+<!-- SCOREBOARD -->
+<div class="screen" id="scoreboard">
+  <div style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:900;text-align:center;padding-top:16px;">💥 RÉSULTATS</div>
+  <div id="podlist" style="width:100%;max-width:600px;display:flex;flex-direction:column;gap:6px;margin:12px auto;padding:0 16px;overflow-y:auto;"></div>
+  <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px;">
+    <button class="btn btn-ghost" onclick="go('lobby')">🏠 ACCUEIL</button>
+    <button class="btn btn-chaos" onclick="location.reload()">🔄 REJOUER</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script>
+const ABLY_KEY='U7BRyw.wc4MuQ:5b4cqlgpCcY0b0-Hhl3if0pG9LqsshyQh9ovTu7j9KQ';
+const COLORS=['#ff2d6b','#00e5ff','#00f5a0','#f5c542','#ff7b00','#c77dff','#ff9ef5','#4cc9f0'];
+
+let roomCode='', players={}, ablyChan=null;
+let questions=[], qIdx=0, roundCount=5;
+let timer=null, timeLeft=0, maxTime=20;
+let playerAnswers={}, playerEstimates={}, playerVotes={};
+let revealDone=false;
+
+// ══════════════════════════════════════
+// BANQUE DE QUESTIONS CHAOS TOTAL
+// ══════════════════════════════════════
+const CHAOS_QUESTIONS = [
+  // QCM WTF
+  {type:'mcq',q:"Quel animal fait des crottes cubiques ?",a:0,c:["Le wombat","Le koala","Le panda","Le blaireau"],pts:1000,reveal:{t:"Le wombat !",d:"Ses intestins compriment et façonnent ses déjections jusqu'à leur donner cette forme cubique unique au monde."}},
+  {type:'mcq',q:"Combien de cœurs possède une pieuvre ?",a:2,c:["1","2","3","5"],pts:1000,reveal:{t:"3 cœurs !",d:"Deux cœurs branchiaux pompent le sang vers les branchies, un cœur systémique le distribue au reste du corps."}},
+  {type:'mcq',q:"Quelle est la couleur du sang des pieuvres ?",a:1,c:["Rouge","Bleu","Vert","Incolore"],pts:1000,reveal:{t:"Bleu !",d:"Leur sang contient de l'hémocyanine (cuivre) au lieu de l'hémoglobine (fer), ce qui lui donne cette couleur bleue."}},
+  {type:'mcq',q:"Le miel peut-il se conserver indéfiniment ?",a:0,c:["Oui","Non","Seulement 100 ans","10 ans max"],pts:1000,reveal:{t:"Oui, indéfiniment !",d:"Du miel vieux de 3000 ans a été retrouvé dans des tombes égyptiennes et était encore consommable."}},
+  {type:'mcq',q:"Combien de temps un être humain peut survivre sans dormir (record) ?",a:2,c:["3 jours","7 jours","11 jours","30 jours"],pts:1000,reveal:{t:"11 jours !",d:"Randy Gardner en 1964 est resté éveillé 264 heures (11 jours) sous surveillance médicale."}},
+  {type:'mcq',q:"Quelle est la vitesse d'un éternuement ?",a:1,c:["50 km/h","160 km/h","300 km/h","500 km/h"],pts:1000,reveal:{t:"160 km/h !",d:"Voire plus selon les études — certaines mesurent jusqu'à 300 km/h pour les plus violents."}},
+  {type:'mcq',q:"Quelle est la seule lettre qui n'apparaît dans aucun nom d'État américain ?",a:3,c:["X","Z","J","Q"],pts:1000,reveal:{t:"Q !",d:"Toutes les autres lettres de l'alphabet apparaissent dans au moins un nom d'État américain, sauf le Q."}},
+  {type:'mcq',q:"Combien de muscles faut-il pour sourire ?",a:0,c:["12","17","43","72"],pts:1000,reveal:{t:"12 muscles !",d:"Contre 11 pour froncer les sourcils — contrairement à l'idée reçue, sourire n'est pas plus fatigant."}},
+  {type:'mcq',q:"Quel pays possède le plus de lacs au monde ?",a:1,c:["Russie","Canada","Finlande","États-Unis"],pts:1000,reveal:{t:"Canada !",d:"Le Canada possède environ 60% des lacs d'eau douce de la planète, soit plus de 2 millions de lacs."}},
+  {type:'mcq',q:"Quelle est la chose la plus vendue dans le monde chaque année ?",a:2,c:["Coca-Cola","Smartphones","Cartes SIM","Briques LEGO"],pts:1000,reveal:{t:"Briques LEGO !",d:"LEGO produit environ 306 milliards de briques par an, soit 36 millions à l'heure — plus que tout autre fabricant de jouets."}},
+  {type:'mcq',q:"Un crocodile peut-il tirer la langue ?",a:1,c:["Oui","Non","Seulement sous l'eau","Seulement les femelles"],pts:1000,reveal:{t:"Non !",d:"La langue du crocodile est attachée au fond de sa gueule par une membrane, il lui est impossible de la tirer."}},
+  {type:'mcq',q:"Quelle est la probabilité d'être frappé par la foudre deux fois dans sa vie ?",a:2,c:["1 sur 1 000 000","1 sur 100 000","1 sur 9","1 sur 1 000"],pts:1000,reveal:{t:"1 sur 9 !",d:"Roy Sullivan, garde forestier américain, a été frappé par la foudre 7 fois au cours de sa vie."}},
+  {type:'mcq',q:"Combien de dents possède un escargot ?",a:3,c:["0","8","50","Plus de 14 000"],pts:1000,reveal:{t:"Plus de 14 000 !",d:"Les dents microscopiques de l'escargot sont disposées sur une langue râpeuse appelée radula."}},
+  {type:'mcq',q:"Quelle planète tourne dans le sens inverse des autres ?",a:1,c:["Mars","Vénus","Saturne","Mercure"],pts:1000,reveal:{t:"Vénus !",d:"Sur Vénus, le soleil se lève à l'ouest et se couche à l'est — en plus sa rotation est extrêmement lente."}},
+  {type:'mcq',q:"Quel est le son le plus fort jamais produit naturellement sur Terre ?",a:2,c:["La chute de Tunguska","Le tremblement de terre de 1960","L'éruption du Krakatoa","La chute d'une météorite"],pts:1000,reveal:{t:"L'éruption du Krakatoa (1883) !",d:"Entendu à plus de 4 800 km, il a fait le tour de la Terre 4 fois et a été entendu depuis l'Australie."}},
+
+  // ESTIMATION
+  {type:'estimation',q:"Combien de kilomètres de vaisseaux sanguins dans un corps humain ?",correct:100000,unit:"km",min:0,max:200000,reveal:{t:"≈ 100 000 km",d:"Mis bout à bout, ils feraient 2,5 fois le tour de la Terre."}},
+  {type:'estimation',q:"Combien de fois par jour un adulte cligne des yeux en moyenne ?",correct:15000,unit:"fois",min:0,max:50000,reveal:{t:"≈ 15 000 fois",d:"Soit environ 10 à 20 fois par minute, ce qui représente 30 minutes de fermeture par jour."}},
+  {type:'estimation',q:"Combien de bactéries vivent sur votre téléphone par cm² ?",correct:25000,unit:"bactéries/cm²",min:0,max:100000,reveal:{t:"≈ 25 000 bactéries/cm²",d:"Votre téléphone est 10 fois plus sale qu'une lunette de toilettes selon certaines études."}},
+  {type:'estimation',q:"Combien de secondes dure une journée de 24h ?",correct:86400,unit:"secondes",min:0,max:200000,reveal:{t:"86 400 secondes",d:"24 × 60 × 60 = 86 400. Maintenant tu le sauras toujours."}},
+  {type:'estimation',q:"Combien de litres de salive produit-on par an ?",correct:730,unit:"litres",min:0,max:2000,reveal:{t:"≈ 730 litres",d:"Soit environ 2 litres par jour — assez pour remplir une baignoire en un an."}},
+
+  // VOTE MAJORITÉ
+  {type:'majority',q:"L'ananas sur une pizza ?",opts:["Excellente idée 🍍","Crime gastronomique 🚫"],reveal:{t:"Le débat du siècle !",d:"45% des Français sont pour, 55% contre selon un sondage IFOP 2022. La réponse correcte ? Celle de la majorité ici !"}},
+  {type:'majority',q:"Tu révèles un secret gênant pour sauver ton meilleur ami ?",opts:["Je révèle tout 🗣️","Je garde le secret 🤫"],reveal:{t:"Question de loyauté !",d:"Pas de bonne réponse — mais la majorité est gagnante !"}},
+  {type:'majority',q:"Dormir avec des chaussettes ?",opts:["Oui, c'est parfait 🧦","Non, c'est barbare ❌"],reveal:{t:"40% des Français dorment avec des chaussettes !",d:"La majorité mondiale dit non — mais les Nordiques disent oui."}},
+  {type:'majority',q:"Tu peux te permettre une seule chose : laquelle ?",opts:["Voyager toute sa vie 🌍","Maison + voiture + stabilité 🏠"],reveal:{t:"Question de valeurs !",d:"Les Millennials choisissent à 60% le voyage. Les générations précédentes choisissent la stabilité."}},
+  {type:'majority',q:"Si tu devais perdre un sens, lequel sacrifierais-tu ?",opts:["L'odorat 👃","Le goût 👅"],reveal:{t:"La plupart sacrifient l'odorat !",d:"80% des personnes choisissent de perdre l'odorat plutôt que le goût. Mais les deux sont liés..."}},
+
+  // JACKPOT NUMÉRIQUE
+  {type:'jackpot',q:"Combien de secondes exactement dans 24h ?",correct:86400,unit:"secondes",reveal:{t:"86 400 secondes !",d:"24 × 60 × 60. Le jackpot pour la réponse exacte !"}},
+  {type:'jackpot',q:"En quelle année a été inventé le World Wide Web ?",correct:1991,unit:"",reveal:{t:"1991 !",d:"Tim Berners-Lee l'a mis en ligne publiquement le 6 août 1991 depuis le CERN."}},
+  {type:'jackpot',q:"Combien y a-t-il d'os dans la main humaine ?",correct:27,unit:"os",reveal:{t:"27 os !",d:"8 os du carpe + 5 métacarpes + 14 phalanges = 27 os dans chaque main."}},
+];
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+function init(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  roomCode=Array.from({length:4},()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+  document.getElementById('rc').textContent=roomCode;
+
+  const base=location.href.replace('amusoir-chaos.html','amusoir-player.html').split('?')[0];
+  const playerUrl=base+'?room='+roomCode;
+  document.getElementById('rurl').textContent=playerUrl;
+
+  try{
+    const qr=qrcode(0,'M');qr.addData(playerUrl);qr.make();
+    const img=document.createElement('img');
+    img.src=qr.createDataURL(4,0);img.style.cssText='width:148px;height:148px;border-radius:6px;display:block;';
+    document.getElementById('qr-box').innerHTML='';
+    document.getElementById('qr-box').appendChild(img);
+  }catch(e){}
+
+  connectAbly();
+}
+
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function goSetup(){go('setup');}
+function setRounds(n,el){roundCount=n;document.querySelectorAll('.diff-pill').forEach(p=>p.classList.remove('on'));el.classList.add('on');}
+
+// ══════════════════════════════════════
+// ABLY
+// ══════════════════════════════════════
+function connectAbly(){
+  const ably=new Ably.Realtime(ABLY_KEY);
+  ably.connection.on('connected',()=>{
+    document.getElementById('sled').className='sled ok';
+    document.getElementById('stxt').textContent='Multijoueur actif ✓';
+    ablyChan=ably.channels.get('amusoir-chaos-'+roomCode);
+    ablyChan.subscribe('join',msg=>onJoin(msg.data));
+    ablyChan.subscribe('answer',msg=>onAnswer(msg.data));
+    ablyChan.subscribe('estimate',msg=>onEstimate(msg.data));
+    ablyChan.subscribe('vote',msg=>onVote(msg.data));
+    ablyChan.subscribe('jackpot',msg=>onJackpot(msg.data));
+  });
+  ably.connection.on('disconnected',()=>{document.getElementById('stxt').textContent='Reconnexion...';});
+}
+function broadcast(ev,data){if(ablyChan)ablyChan.publish(ev,data);}
+
+// ══════════════════════════════════════
+// JOUEURS
+// ══════════════════════════════════════
+function onJoin(d){
+  if(!players[d.id]){
+    const idx=Object.keys(players).length;
+    players[d.id]={id:d.id,name:d.name,color:COLORS[idx%COLORS.length],score:0};
+  }
+  renderPlist();renderChips();
+  broadcast('state',{phase:'lobby',players:getPlayers()});
+}
+function getPlayers(){return Object.values(players).map(p=>({id:p.id,name:p.name,color:p.color,score:p.score}));}
+function renderPlist(){
+  const arr=Object.values(players);
+  document.getElementById('pcnt').textContent=arr.length;
+  document.getElementById('plist').innerHTML=arr.length
+    ?arr.map(p=>`<div class="pentry"><div class="pdot" style="background:${p.color}"></div>${p.name}</div>`).join('')
+    :'<div class="waiting">En attente...</div>';
+}
+function renderChips(){
+  document.getElementById('schips').innerHTML=Object.values(players).map(p=>`<div class="chip"><div class="cdot" style="background:${p.color}"></div>${p.name}<span class="cpts" style="color:${p.color}">${p.score}</span></div>`).join('');
+}
+
+// ══════════════════════════════════════
+// JEU
+// ══════════════════════════════════════
+function startGame(){
+  const pool=[...CHAOS_QUESTIONS];
+  shuffle(pool);
+  questions=pool.slice(0,Math.min(roundCount,pool.length));
+  qIdx=0;
+  Object.values(players).forEach(p=>p.score=0);
+  document.getElementById('qtot').textContent=questions.length;
+  go('game');renderChips();
+  loadQuestion();
+}
+
+function loadQuestion(){
+  revealDone=false;playerAnswers={};playerEstimates={};playerVotes={};
+  const q=questions[qIdx];
+  document.getElementById('qn').textContent=qIdx+1;
+  document.getElementById('btn-next').style.display='none';
+  document.getElementById('tfill').style.width='100%';
+  clearInterval(timer);
+
+  const content=document.getElementById('game-content');
+  content.innerHTML='';
+
+  if(q.type==='mcq') renderMCQ(q,content);
+  else if(q.type==='estimation') renderEstimation(q,content);
+  else if(q.type==='majority') renderMajority(q,content);
+  else if(q.type==='jackpot') renderJackpot(q,content);
+
+  broadcast('state',{phase:'chaos-question',type:q.type,q:q.q,opts:q.opts||q.c||null,min:q.min,max:q.max,unit:q.unit,idx:qIdx,total:questions.length});
+  startTimer(q.type==='estimation'||q.type==='jackpot'?30:q.type==='majority'?15:20);
+}
+
+function startTimer(t){
+  timeLeft=t;maxTime=t;
+  document.getElementById('tnum').textContent=timeLeft;
+  clearInterval(timer);
+  timer=setInterval(()=>{
+    timeLeft--;
+    document.getElementById('tnum').textContent=timeLeft;
+    document.getElementById('tfill').style.width=(timeLeft/maxTime*100)+'%';
+    if(timeLeft<=0){clearInterval(timer);if(!revealDone)revealQuestion();}
+  },1000);
+}
+
+// ── MCQ ──
+function renderMCQ(q,container){
+  const colors=['linear-gradient(135deg,#e63946,#c1121f)','linear-gradient(135deg,#2196f3,#0d47a1)','linear-gradient(135deg,#43a047,#1b5e20)','linear-gradient(135deg,#ffc107,#e65100)'];
+  container.innerHTML=`
+    <div class="qcard">
+      <div class="qtype-badge" style="background:rgba(255,123,0,.2);color:var(--orange);border:1px solid var(--orange)">QCM</div>
+      <div class="qtxt">${q.q}</div>
+    </div>
+    <div class="agrid">${q.c.map((a,i)=>`<button class="abtn" style="background:${colors[i]}" onclick="masterRevealMCQ()">${a}</button>`).join('')}</div>`;
+}
+function onAnswer(d){
+  if(revealDone)return;
+  const q=questions[qIdx];if(!players[d.id])return;
+  if(d.answerIdx===q.a){
+    const bonus=Math.round(q.pts*(timeLeft/maxTime));
+    players[d.id].score+=bonus;
+    showToast(`✓ ${players[d.id].name} +${bonus}pts`);
+    renderChips();
+  }
+  if(Object.keys(playerAnswers).length===0) revealQuestion();
+  playerAnswers[d.id]=d.answerIdx;
+}
+function masterRevealMCQ(){if(!revealDone)revealQuestion();}
+
+// ── ESTIMATION ──
+function renderEstimation(q,container){
+  container.innerHTML=`
+    <div class="qcard">
+      <div class="qtype-badge" style="background:rgba(0,229,255,.2);color:var(--cyan);border:1px solid var(--cyan)">ESTIMATION</div>
+      <div class="qtxt">${q.q}</div>
+    </div>
+    <div class="estim-wrap">
+      <div class="estim-val" id="estim-display">${Math.round((q.min+q.max)/2).toLocaleString()}</div>
+      <div class="estim-unit">${q.unit}</div>
+      <div class="estim-players" id="estim-players"></div>
+    </div>`;
+  updateEstimPlayers();
+}
+function onEstimate(d){
+  if(!players[d.id])return;
+  playerEstimates[d.id]=d.value;
+  updateEstimPlayers();
+  if(Object.keys(playerEstimates).length>=Object.keys(players).length)revealQuestion();
+}
+function updateEstimPlayers(){
+  const el=document.getElementById('estim-players');
+  if(!el)return;
+  el.innerHTML=Object.values(players).map(p=>`
+    <div class="estim-pcard">
+      <div class="estim-pname" style="color:${p.color}">${p.name}</div>
+      <div class="estim-pval ${playerEstimates[p.id]!==undefined?'submitted':''}">${playerEstimates[p.id]!==undefined?playerEstimates[p.id].toLocaleString()+'':'⏳'}</div>
+    </div>`).join('');
+}
+
+// ── MAJORITÉ ──
+function renderMajority(q,container){
+  container.innerHTML=`
+    <div class="qcard">
+      <div class="qtype-badge" style="background:rgba(199,125,255,.2);color:var(--purple);border:1px solid var(--purple)">VOTE MAJORITAIRE</div>
+      <div class="qtxt">${q.q}</div>
+    </div>
+    <div class="vote-wrap">
+      ${q.opts.map((o,i)=>`<div class="vote-opt"><div>${o}</div><div class="vote-count" id="vc-${i}">0</div><div class="vote-pct" id="vp-${i}">0%</div><div class="vote-voters" id="vv-${i}"></div></div>`).join('')}
+    </div>`;
+}
+function onVote(d){
+  if(!players[d.id])return;
+  playerVotes[d.id]=d.optIdx;
+  updateVotes();
+  if(Object.keys(playerVotes).length>=Object.keys(players).length)revealQuestion();
+}
+function updateVotes(){
+  const q=questions[qIdx];if(!q||q.type!=='majority')return;
+  const counts=[0,0];
+  Object.values(playerVotes).forEach(v=>counts[v]++);
+  const total=Object.values(playerVotes).length||1;
+  counts.forEach((c,i)=>{
+    const el=document.getElementById(`vc-${i}`);
+    const pct=document.getElementById(`vp-${i}`);
+    const vv=document.getElementById(`vv-${i}`);
+    if(el)el.textContent=c;
+    if(pct)pct.textContent=Math.round(c/total*100)+'%';
+    if(vv)vv.innerHTML=Object.entries(playerVotes).filter(([,v])=>v===i).map(([id])=>`<span class="vote-chip" style="color:${players[id]?.color}">${players[id]?.name}</span>`).join('');
+  });
+}
+
+// ── JACKPOT ──
+function renderJackpot(q,container){
+  container.innerHTML=`
+    <div class="qcard">
+      <div class="qtype-badge" style="background:rgba(245,197,66,.2);color:var(--gold);border:1px solid var(--gold)">🎰 JACKPOT</div>
+      <div class="qtxt">${q.q}</div>
+      <div style="font-size:12px;color:var(--dim);margin-top:8px;">Réponse exacte = jackpot • Les joueurs misent sur leur téléphone</div>
+    </div>
+    <div class="jackpot-bets" id="jbets"></div>`;
+  updateJackpotBets();
+}
+function onJackpot(d){
+  if(!players[d.id])return;
+  playerEstimates[d.id]={value:d.value,bet:d.bet};
+  updateJackpotBets();
+  if(Object.keys(playerEstimates).length>=Object.keys(players).length)revealQuestion();
+}
+function updateJackpotBets(){
+  const el=document.getElementById('jbets');if(!el)return;
+  el.innerHTML=Object.values(players).map(p=>{
+    const e=playerEstimates[p.id];
+    return`<div class="jbet-card">
+      <div class="jbet-name" style="color:${p.color}">${p.name}</div>
+      <div class="jbet-val">${e?e.value:'-'}</div>
+      <div class="jbet-bet" style="color:var(--gold)">${e?'Mise: '+e.bet+'pts':'⏳'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════
+// RÉVÉLATION
+// ══════════════════════════════════════
+function revealQuestion(){
+  revealDone=true;clearInterval(timer);
+  const q=questions[qIdx];
+  const content=document.getElementById('game-content');
+
+  if(q.type==='mcq'){
+    // Révéler la bonne réponse visuellement
+    const btns=content.querySelectorAll('.abtn');
+    btns.forEach((b,i)=>{b.classList.add(i===q.a?'right':'wrong');b.disabled=true;});
+    // Points déjà attribués en temps réel
+    broadcast('state',{phase:'chaos-reveal',type:'mcq',correctIdx:q.a,reveal:q.reveal,players:getPlayers()});
+  }
+  else if(q.type==='estimation'){
+    // Calculer les points par proximité
+    const correct=q.correct;
+    const maxDist=Math.max(...Object.values(playerEstimates).map(v=>Math.abs(v-correct)),1);
+    Object.entries(playerEstimates).forEach(([id,val])=>{
+      const dist=Math.abs(val-correct);
+      const pts=Math.round(1500*(1-dist/maxDist));
+      if(pts>0&&players[id]){players[id].score+=pts;}
+    });
+    renderChips();
+    broadcast('state',{phase:'chaos-reveal',type:'estimation',correct,reveal:q.reveal,players:getPlayers()});
+  }
+  else if(q.type==='majority'){
+    // Calculer la majorité
+    const counts=[0,0];
+    Object.values(playerVotes).forEach(v=>counts[v]++);
+    const winner=counts[0]>counts[1]?0:counts[1]>counts[0]?1:-1;
+    updateVotes();
+    Object.entries(playerVotes).forEach(([id,v])=>{
+      if(v===winner&&players[id]){players[id].score+=1000;}
+    });
+    renderChips();
+    broadcast('state',{phase:'chaos-reveal',type:'majority',winner,reveal:q.reveal,players:getPlayers()});
+  }
+  else if(q.type==='jackpot'){
+    const correct=q.correct;
+    Object.entries(playerEstimates).forEach(([id,e])=>{
+      if(!players[id])return;
+      if(e.value===correct){players[id].score+=e.bet*3;showToast(`🎰 JACKPOT ! ${players[id].name} +${e.bet*3}pts !`);}
+      else{players[id].score-=e.bet;}
+    });
+    renderChips();
+    broadcast('state',{phase:'chaos-reveal',type:'jackpot',correct,reveal:q.reveal,players:getPlayers()});
+  }
+
+  // Afficher le reveal
+  const revCard=document.createElement('div');
+  revCard.className='reveal-card';
+  revCard.innerHTML=`<div class="reveal-title">${q.reveal.t}</div><div class="reveal-text">${q.reveal.d}</div>`;
+  content.appendChild(revCard);
+
+  document.getElementById('btn-next').style.display='flex';
+}
+
+function nextQuestion(){
+  qIdx++;
+  if(qIdx>=questions.length){endGame();return;}
+  loadQuestion();
+}
+
+function endGame(){
+  clearInterval(timer);
+  broadcast('state',{phase:'scoreboard',players:getPlayers()});
+  showScoreboard();
+}
+
+function showScoreboard(){
+  const arr=Object.values(players).sort((a,b)=>b.score-a.score);
+  const medals=['🥇','🥈','🥉'];
+  const max=arr[0]?.score||1;
+  document.getElementById('podlist').innerHTML=arr.map((p,i)=>`
+    <div class="prow ${i===0?'p1':''}" style="animation-delay:${i*.1}s">
+      <div class="prank">${medals[i]||i+1}</div>
+      <div class="pname" style="color:${p.color}">${p.name}</div>
+      <div class="pbw"><div class="pb" style="width:${p.score/max*100}%;background:${p.color}"></div></div>
+      <div class="ppts" style="color:${p.color}">${p.score} pts</div>
+    </div>`).join('');
+  go('scoreboard');
+  if(arr[0]?.score>0)confetti();
+}
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+function confetti(){const c=['#f5c542','#00e5ff','#ff2d6b','#00f5a0','#ff7b00','#c77dff'];for(let i=0;i<80;i++){const el=document.createElement('div');el.className='cf';el.style.cssText=`left:${Math.random()*100}vw;background:${c[Math.floor(Math.random()*c.length)]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;animation-duration:${2+Math.random()*2}s;animation-delay:${Math.random()}s;`;document.body.appendChild(el);setTimeout(()=>el.remove(),4500);}}
+
+init();
+</script>
+</body>
+</html>
