@@ -1301,7 +1301,7 @@ function loadQ(){
   if(imgEl) imgEl.innerHTML = imgHtml;
   // Envoyer l'image data URI si disponible
   const imgData = q.img && IMG[q.img] ? IMG[q.img] : null;
-  broadcast('state',{phase:'quiz-question',idx:quizIdx,q:q.q,cat:q.cat,choices:sc,answer:q.a,imgData});
+  broadcast('state',{phase:'quiz-question',idx:quizIdx,total:quizQs.length,q:q.q,cat:q.cat,choices:sc,answer:q.a,imgData});
   quizTimer=setInterval(()=>{
     quizTime--;
     if(!quizDone){
