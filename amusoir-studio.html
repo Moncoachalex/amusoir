@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMUSOIR STUDIO</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07070f;--s1:#0f0f1c;--s2:#16162a;--s3:#1e1e35;
+  --gold:#f5c542;--cyan:#00e5ff;--pink:#ff2d6b;--green:#00f5a0;
+  --orange:#ff7b00;--purple:#c77dff;--red:#ff4444;
+  --text:#f0f0ff;--dim:#666688;--border:rgba(255,255,255,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── TOP BAR ── */
+.topbar{display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0;}
+.logo-studio{font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo-studio span{-webkit-text-fill-color:var(--dim);font-size:13px;font-weight:400;margin-left:6px;}
+.topbar-actions{display:flex;gap:8px;margin-left:auto;}
+.btn{font-family:'Outfit',sans-serif;font-weight:700;padding:8px 16px;border-radius:10px;border:none;cursor:pointer;font-size:13px;transition:.15s;}
+.btn-primary{background:linear-gradient(135deg,var(--cyan),#0099bb);color:#001a20;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#e8a020);color:#1a1008;}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--dim);}
+.btn-ghost:hover{border-color:var(--dim);color:var(--text);}
+.btn-danger{background:rgba(255,68,68,.15);border:1px solid var(--red);color:var(--red);}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:7px;}
+.btn:hover:not(.btn-ghost){filter:brightness(1.1);}
+.project-name{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;padding:4px 8px;outline:none;width:220px;}
+.project-name:focus{border-color:var(--cyan);}
+
+/* ── LAYOUT ── */
+.workspace{display:flex;flex:1;overflow:hidden;}
+
+/* ── SIDEBAR ROUNDS ── */
+.sidebar{width:260px;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar-header{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.sidebar-title{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--dim);}
+.rounds-list{flex:1;overflow-y:auto;padding:8px;}
+.round-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;cursor:pointer;border:1px solid transparent;margin-bottom:4px;transition:.15s;user-select:none;}
+.round-item:hover{background:var(--s2);}
+.round-item.active{background:var(--s2);border-color:var(--cyan);}
+.round-num{font-size:10px;color:var(--dim);min-width:20px;}
+.round-type-icon{font-size:16px;}
+.round-info{flex:1;overflow:hidden;}
+.round-title{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.round-type-lbl{font-size:10px;color:var(--dim);}
+.round-drag{color:var(--dim);cursor:grab;font-size:14px;opacity:0;transition:.15s;}
+.round-item:hover .round-drag{opacity:1;}
+.round-del{color:var(--dim);cursor:pointer;font-size:12px;opacity:0;transition:.15s;}
+.round-item:hover .round-del{opacity:1;}
+.round-del:hover{color:var(--red);}
+
+/* TYPE SELECTOR */
+.type-picker{padding:12px 14px;border-top:1px solid var(--border);}
+.type-picker-title{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:8px;}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.type-btn{padding:8px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s2);cursor:pointer;text-align:center;transition:.15s;font-size:11px;color:var(--dim);}
+.type-btn:hover{border-color:var(--cyan);color:var(--text);background:var(--s3);}
+.type-btn .ticon{font-size:18px;display:block;margin-bottom:3px;}
+
+/* ── EDITOR PANEL ── */
+.editor{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.editor-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--dim);}
+.editor-empty .big{font-size:48px;}
+.editor-content{flex:1;display:flex;overflow:hidden;}
+
+/* FORM */
+.form-panel{width:340px;overflow-y:auto;padding:18px;border-right:1px solid var(--border);flex-shrink:0;}
+.form-section{margin-bottom:20px;}
+.form-section-title{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:11px;color:var(--dim);margin-bottom:5px;letter-spacing:1px;}
+.field input,.field textarea,.field select{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;transition:.2s;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--cyan);}
+.field textarea{resize:vertical;min-height:70px;}
+.field select option{background:var(--s2);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;}
+.toggle-lbl{font-size:12px;color:var(--dim);}
+.toggle{position:relative;width:36px;height:20px;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:#333355;border-radius:10px;cursor:pointer;transition:.2s;}
+.toggle input:checked + .toggle-slider{background:var(--cyan);}
+.toggle-slider:before{content:'';position:absolute;width:14px;height:14px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.2s;}
+.toggle input:checked + .toggle-slider:before{transform:translateX(16px);}
+.answer-item{display:flex;gap:6px;align-items:center;margin-bottom:6px;}
+.answer-item input{flex:1;}
+.answer-correct{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:.2s;}
+.answer-correct.on{border-color:var(--green);background:rgba(0,245,160,.15);color:var(--green);}
+.answer-del{color:var(--dim);cursor:pointer;font-size:12px;flex-shrink:0;}
+.answer-del:hover{color:var(--red);}
+.color-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+
+/* PREVIEW + TIMELINE */
+.preview-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.preview-area{flex:1;background:#000;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.preview-placeholder{color:var(--dim);text-align:center;}
+.preview-placeholder .big{font-size:36px;}
+video#preview-video{max-width:100%;max-height:100%;display:none;}
+.preview-overlay{position:absolute;inset:0;pointer-events:none;}
+.preview-question{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);border:1px solid var(--cyan);border-radius:14px;padding:12px 20px;font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;text-align:center;max-width:80%;display:none;}
+.preview-status{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.7);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--green);}
+
+/* TIMELINE */
+.timeline-zone{height:160px;background:var(--s1);border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;}
+.tl-header{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);}
+.tl-title{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);}
+.tl-time{font-family:'Outfit',sans-serif;font-size:16px;font-weight:900;color:var(--gold);min-width:60px;}
+.tl-controls{display:flex;gap:6px;margin-left:auto;}
+.tl-btn{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);cursor:pointer;font-size:12px;transition:.15s;}
+.tl-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+.tl-btn.active{border-color:var(--pink);color:var(--pink);background:rgba(255,45,107,.1);}
+.tl-scrubber{flex:1;position:relative;margin:0 12px;cursor:pointer;}
+.tl-track{height:6px;background:var(--s2);border-radius:3px;position:relative;top:50%;transform:translateY(-50%);}
+.tl-progress{height:100%;background:var(--cyan);border-radius:3px;transition:width .1s;}
+.tl-head{position:absolute;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:var(--gold);border:2px solid white;box-shadow:0 0 8px var(--gold);cursor:grab;}
+.tl-markers{position:absolute;top:0;left:0;right:0;height:100%;}
+.tl-marker{position:absolute;top:0;bottom:0;width:2px;cursor:pointer;transform:translateX(-50%);}
+.tl-marker-line{width:100%;height:100%;}
+.tl-marker-label{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:9px;white-space:nowrap;padding:2px 5px;border-radius:3px;font-family:'DM Mono',monospace;}
+.tl-events-row{display:flex;gap:6px;padding:6px 12px;overflow-x:auto;align-items:center;}
+.tl-event-chip{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:16px;font-size:10px;cursor:pointer;border:1px solid transparent;white-space:nowrap;transition:.15s;}
+.tl-event-chip:hover{filter:brightness(1.2);}
+.tl-event-chip .chip-time{font-family:'Outfit',sans-serif;font-weight:900;font-size:11px;}
+.tl-event-chip .chip-del{opacity:0;font-size:10px;}
+.tl-event-chip:hover .chip-del{opacity:1;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:18px;padding:24px;width:480px;max-height:80vh;overflow-y:auto;}
+.modal-title{font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;margin-bottom:18px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--border);padding:10px 20px;border-radius:10px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;z-index:300;white-space:nowrap;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo-studio">AMUSOIR <span>STUDIO</span></div>
+  <input class="project-name" id="project-name" type="text" value="Ma soirée" placeholder="Nom de la partie">
+  <div class="topbar-actions">
+    <button class="btn btn-ghost" onclick="importJSON()">📂 Importer</button>
+    <button class="btn btn-ghost" onclick="previewFull()">👁 Prévisualiser</button>
+    <button class="btn btn-gold" onclick="exportJSON()">💾 Exporter JSON</button>
+    <button class="btn btn-primary" onclick="launchEngine()">🚀 Lancer la partie</button>
+  </div>
+</div>
+
+<div class="workspace">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title">ROUNDS (<span id="round-count">0</span>)</span>
+      <button class="btn btn-ghost btn-sm" onclick="duplicateRound()">⎘</button>
+    </div>
+    <div class="rounds-list" id="rounds-list"></div>
+    <div class="type-picker">
+      <div class="type-picker-title">Ajouter un round</div>
+      <div class="type-grid">
+        <div class="type-btn" onclick="addRound('mcq')"><span class="ticon">🎯</span>QCM</div>
+        <div class="type-btn" onclick="addRound('video_prediction')"><span class="ticon">🎬</span>Prédiction vidéo</div>
+        <div class="type-btn" onclick="addRound('image_reveal')"><span class="ticon">🔍</span>Image révélée</div>
+        <div class="type-btn" onclick="addRound('audio_guess')"><span class="ticon">🎵</span>Devine le son</div>
+        <div class="type-btn" onclick="addRound('estimation')"><span class="ticon">🔢</span>Estimation</div>
+        <div class="type-btn" onclick="addRound('majority')"><span class="ticon">🗳️</span>Majorité</div>
+        <div class="type-btn" onclick="addRound('jackpot')"><span class="ticon">🎰</span>Jackpot</div>
+        <div class="type-btn" onclick="addRound('buzz')"><span class="ticon">🔔</span>Buzz</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDITOR -->
+  <div class="editor">
+    <div class="editor-empty" id="editor-empty">
+      <div class="big">🎬</div>
+      <div style="font-size:14px;">Crée ou sélectionne un round</div>
+      <div style="font-size:12px;color:var(--dim);">Clique sur un type dans le panneau gauche pour commencer</div>
+    </div>
+    <div class="editor-content" id="editor-content" style="display:none;">
+      <!-- FORM -->
+      <div class="form-panel" id="form-panel"></div>
+      <!-- PREVIEW + TIMELINE -->
+      <div class="preview-panel">
+        <div class="preview-area" id="preview-area">
+          <div class="preview-placeholder" id="preview-placeholder">
+            <div class="big">📺</div>
+            <div style="font-size:12px;margin-top:8px;">Aperçu du round</div>
+          </div>
+          <video id="preview-video" playsinline></video>
+          <img id="preview-image" style="max-width:100%;max-height:100%;display:none;object-fit:contain;">
+          <div class="preview-overlay">
+            <div class="preview-status" id="preview-status" style="display:none;"></div>
+            <div class="preview-question" id="preview-question"></div>
+          </div>
+        </div>
+        <div class="timeline-zone" id="timeline-zone">
+          <div class="tl-header">
+            <span class="tl-title">TIMELINE</span>
+            <span class="tl-time" id="tl-time">0.0s</span>
+            <div class="tl-controls">
+              <button class="tl-btn" id="tl-play-btn" onclick="tlPlay()">▶ Play</button>
+              <button class="tl-btn" onclick="tlStop()">⏹ Stop</button>
+              <button class="tl-btn" onclick="addMarkerAtCurrent()">📍 Poser marqueur</button>
+            </div>
+          </div>
+          <div class="tl-scrubber" id="tl-scrubber" onmousedown="tlScrubStart(event)" ontouchstart="tlScrubStart(event)">
+            <div class="tl-track">
+              <div class="tl-progress" id="tl-progress" style="width:0%"></div>
+            </div>
+            <div class="tl-markers" id="tl-markers"></div>
+            <div class="tl-head" id="tl-head" style="left:0%"></div>
+          </div>
+          <div class="tl-events-row" id="tl-events-row"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MARQUEUR -->
+<div class="modal-overlay" id="marker-modal">
+  <div class="modal">
+    <div class="modal-title">📍 Ajouter un marqueur</div>
+    <div class="field">
+      <label>Action à déclencher</label>
+      <select id="marker-action">
+        <option value="pause_video">⏸ Pause vidéo</option>
+        <option value="resume_video">▶ Reprendre vidéo</option>
+        <option value="show_question">❓ Afficher la question</option>
+        <option value="open_answers">🟢 Ouvrir les réponses</option>
+        <option value="close_answers">🔴 Fermer les réponses</option>
+        <option value="show_result">✅ Afficher le résultat</option>
+        <option value="show_leaderboard">🏆 Classement</option>
+        <option value="play_audio">🎵 Jouer l'audio</option>
+        <option value="reveal_image">🔍 Révéler l'image</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Temps (secondes)</label>
+      <input type="number" id="marker-time" step="0.1" min="0" value="0">
+    </div>
+    <div class="field">
+      <label>Label (optionnel)</label>
+      <input type="text" id="marker-label" placeholder="ex: Moment de suspense">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('marker-modal')">Annuler</button>
+      <button class="btn btn-primary" onclick="confirmMarker()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORT -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal">
+    <div class="modal-title">📂 Importer un JSON</div>
+    <div class="field">
+      <label>Colle ton JSON ici</label>
+      <textarea id="import-json" style="min-height:200px;font-size:11px;" placeholder='{"name":"Ma soirée","rounds":[...]}'></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('import-modal')">Annuler</button>
+      <button class="btn btn-primary" onclick="confirmImport()">Importer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="file-input" accept="video/*,audio/*,image/*" style="display:none" onchange="handleFileUpload(event)">
+<input type="file" id="json-input" accept=".json" style="display:none" onchange="handleJSONImport(event)">
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════
+let rounds = [];
+let activeIdx = -1;
+let tlDuration = 0;
+let tlInterval = null;
+let tlPlaying = false;
+let mediaBlobs = {}; // id -> blob URL
+let pendingMarkerTime = 0;
+
+const TYPE_META = {
+  mcq:              {icon:'🎯', label:'QCM', color:'#00e5ff'},
+  video_prediction: {icon:'🎬', label:'Prédiction vidéo', color:'#ff7b00'},
+  image_reveal:     {icon:'🔍', label:'Image révélée', color:'#c77dff'},
+  audio_guess:      {icon:'🎵', label:'Devine le son', color:'#f5c542'},
+  estimation:       {icon:'🔢', label:'Estimation', color:'#00f5a0'},
+  majority:         {icon:'🗳️', label:'Vote majorité', color:'#ff2d6b'},
+  jackpot:          {icon:'🎰', label:'Jackpot', color:'#f5c542'},
+  buzz:             {icon:'🔔', label:'Buzz', color:'#ff2d6b'},
+};
+
+const ACTION_META = {
+  pause_video:      {color:'#ff4444', label:'⏸ Pause'},
+  resume_video:     {color:'#00f5a0', label:'▶ Resume'},
+  show_question:    {color:'#00e5ff', label:'❓ Question'},
+  open_answers:     {color:'#00f5a0', label:'🟢 Réponses'},
+  close_answers:    {color:'#ff4444', label:'🔴 Fermer'},
+  show_result:      {color:'#f5c542', label:'✅ Résultat'},
+  show_leaderboard: {color:'#c77dff', label:'🏆 Classement'},
+  play_audio:       {color:'#f5c542', label:'🎵 Audio'},
+  reveal_image:     {color:'#c77dff', label:'🔍 Révélation'},
+};
+
+// ══════════════════════════════════════════════════════════════
+// ROUNDS
+// ══════════════════════════════════════════════════════════════
+function makeRound(type) {
+  const base = {
+    id: Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    type,
+    title: TYPE_META[type]?.label || type,
+    question: '',
+    explanation: '',
+    timer: 20,
+    points: 1000,
+    interaction: type === 'buzz' ? 'buzz' : type === 'majority' ? 'vote' : type === 'estimation' || type === 'jackpot' ? 'slider' : 'mcq',
+    timeline: [],
+    answers: [{text:'', correct:true},{text:'', correct:false},{text:'', correct:false},{text:'', correct:false}],
+    media: null,
+    effects: [],
+    scoring: type === 'estimation' ? 'proximity' : type === 'majority' ? 'majority' : type === 'jackpot' ? 'jackpot' : 'speed',
+  };
+  if(type === 'majority') base.answers = [{text:'', correct:false},{text:'', correct:false}];
+  if(type === 'estimation' || type === 'jackpot') base.answers = [];
+  return base;
+}
+
+function addRound(type) {
+  const r = makeRound(type);
+  rounds.push(r);
+  renderSidebar();
+  selectRound(rounds.length - 1);
+  saveLocal();
+}
+
+function deleteRound(idx, e) {
+  e.stopPropagation();
+  rounds.splice(idx, 1);
+  if(activeIdx >= rounds.length) activeIdx = rounds.length - 1;
+  renderSidebar();
+  if(activeIdx >= 0) selectRound(activeIdx);
+  else { document.getElementById('editor-empty').style.display='flex'; document.getElementById('editor-content').style.display='none'; }
+  saveLocal();
+}
+
+function duplicateRound() {
+  if(activeIdx < 0) return;
+  const copy = JSON.parse(JSON.stringify(rounds[activeIdx]));
+  copy.id = Date.now()+'_copy';
+  copy.title += ' (copie)';
+  rounds.splice(activeIdx+1, 0, copy);
+  renderSidebar();
+  selectRound(activeIdx+1);
+  saveLocal();
+}
+
+function selectRound(idx) {
+  activeIdx = idx;
+  renderSidebar();
+  document.getElementById('editor-empty').style.display = 'none';
+  document.getElementById('editor-content').style.display = 'flex';
+  renderForm();
+  renderTimeline();
+  renderMediaPreview();
+}
+
+function renderSidebar() {
+  document.getElementById('round-count').textContent = rounds.length;
+  document.getElementById('rounds-list').innerHTML = rounds.map((r,i) => {
+    const m = TYPE_META[r.type] || {icon:'?',label:r.type,color:'#fff'};
+    return `<div class="round-item ${i===activeIdx?'active':''}" onclick="selectRound(${i})" draggable="true" ondragstart="dragStart(${i})" ondragover="dragOver(event,${i})" ondrop="dragDrop(event,${i})">
+      <span class="round-num">${i+1}</span>
+      <span class="round-type-icon">${m.icon}</span>
+      <div class="round-info">
+        <div class="round-title">${r.title||m.label}</div>
+        <div class="round-type-lbl" style="color:${m.color}">${m.label}</div>
+      </div>
+      <span class="round-drag">⠿</span>
+      <span class="round-del" onclick="deleteRound(${i},event)">✕</span>
+    </div>`;
+  }).join('');
+}
+
+// ── DRAG & DROP ──
+let dragIdx = -1;
+function dragStart(i){ dragIdx=i; }
+function dragOver(e,i){ e.preventDefault(); }
+function dragDrop(e,i){
+  if(dragIdx<0||dragIdx===i)return;
+  const r=rounds.splice(dragIdx,1)[0];
+  rounds.splice(i,0,r);
+  activeIdx=i;dragIdx=-1;
+  renderSidebar();saveLocal();
+}
+
+// ══════════════════════════════════════════════════════════════
+// FORM
+// ══════════════════════════════════════════════════════════════
+function renderForm() {
+  const r = rounds[activeIdx];
+  if(!r) return;
+  const m = TYPE_META[r.type] || {};
+  const fp = document.getElementById('form-panel');
+
+  const needsAnswers = ['mcq','majority','buzz'].includes(r.type);
+  const needsEstim   = ['estimation','jackpot'].includes(r.type);
+  const needsMedia   = ['video_prediction','image_reveal','audio_guess'].includes(r.type);
+  const needsEffects = ['image_reveal'].includes(r.type);
+
+  fp.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+      <span style="font-size:20px;">${m.icon||'?'}</span>
+      <div>
+        <div style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:900;color:${m.color||'#fff'}">${m.label||r.type}</div>
+        <input type="text" value="${esc(r.title)}" onchange="setField('title',this.value)" style="background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--dim);font-size:11px;width:100%;outline:none;padding:2px 0;">
+      </div>
+    </div>
+
+    <!-- QUESTION -->
+    <div class="form-section">
+      <div class="form-section-title">Question</div>
+      <div class="field">
+        <label>Texte de la question</label>
+        <textarea onchange="setField('question',this.value)" placeholder="Que va-t-il se passer ?">${esc(r.question)}</textarea>
+      </div>
+      <div class="field">
+        <label>Explication (après révélation)</label>
+        <textarea onchange="setField('explanation',this.value)" placeholder="Contexte ou anecdote...">${esc(r.explanation)}</textarea>
+      </div>
+    </div>
+
+    ${needsAnswers ? renderAnswersForm(r) : ''}
+    ${needsEstim   ? renderEstimForm(r)   : ''}
+    ${needsMedia   ? renderMediaForm(r)   : ''}
+    ${needsEffects ? renderEffectsForm(r) : ''}
+
+    <!-- TIMER & SCORING -->
+    <div class="form-section">
+      <div class="form-section-title">Timer & Scoring</div>
+      <div class="row2">
+        <div class="field">
+          <label>Durée (s)</label>
+          <input type="number" value="${r.timer}" min="5" max="120" onchange="setField('timer',+this.value)">
+        </div>
+        <div class="field">
+          <label>Points max</label>
+          <input type="number" value="${r.points}" min="100" step="100" onchange="setField('points',+this.value)">
+        </div>
+      </div>
+      <div class="field">
+        <label>Type de scoring</label>
+        <select onchange="setField('scoring',this.value)">
+          <option value="speed" ${r.scoring==='speed'?'selected':''}>Vitesse (plus vite = plus de points)</option>
+          <option value="proximity" ${r.scoring==='proximity'?'selected':''}>Proximité (estimation)</option>
+          <option value="majority" ${r.scoring==='majority'?'selected':''}>Majorité</option>
+          <option value="jackpot" ${r.scoring==='jackpot'?'selected':''}>Jackpot (réponse exacte)</option>
+          <option value="fixed" ${r.scoring==='fixed'?'selected':''}>Fixe (même points pour tous)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- OPTIONS -->
+    <div class="form-section">
+      <div class="form-section-title">Options</div>
+      <div class="toggle-row">
+        <span class="toggle-lbl">Leaderboard après ce round</span>
+        <label class="toggle"><input type="checkbox" ${r.showLeaderboard?'checked':''} onchange="setField('showLeaderboard',this.checked)"><div class="toggle-slider"></div></label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-lbl">Afficher explication</span>
+        <label class="toggle"><input type="checkbox" ${r.showExplanation!==false?'checked':''} onchange="setField('showExplanation',this.checked)"><div class="toggle-slider"></div></label>
+      </div>
+    </div>`;
+}
+
+function renderAnswersForm(r) {
+  const colors = ['#e63946','#2196f3','#43a047','#ffc107'];
+  return `<div class="form-section">
+    <div class="form-section-title">Réponses</div>
+    ${(r.answers||[]).map((a,i) => `
+      <div class="answer-item">
+        <div class="color-dot" style="background:${colors[i%4]}"></div>
+        <input type="text" value="${esc(a.text)}" placeholder="Réponse ${i+1}" onchange="setAnswer(${i},'text',this.value)">
+        <div class="answer-correct ${a.correct?'on':''}" title="Bonne réponse" onclick="toggleCorrect(${i})">✓</div>
+        ${r.answers.length>2?`<span class="answer-del" onclick="removeAnswer(${i})">✕</span>`:''}
+      </div>`).join('')}
+    ${r.type!=='majority'?`<button class="btn btn-ghost btn-sm" style="margin-top:4px" onclick="addAnswer()">+ Ajouter une réponse</button>`:''}
+  </div>`;
+}
+
+function renderEstimForm(r) {
+  return `<div class="form-section">
+    <div class="form-section-title">Valeur correcte</div>
+    <div class="row3">
+      <div class="field"><label>Min</label><input type="number" value="${r.estimMin||0}" onchange="setField('estimMin',+this.value)"></div>
+      <div class="field"><label>Max</label><input type="number" value="${r.estimMax||100000}" onchange="setField('estimMax',+this.value)"></div>
+      <div class="field"><label>Réponse</label><input type="number" value="${r.estimCorrect||0}" onchange="setField('estimCorrect',+this.value)"></div>
+    </div>
+    <div class="field"><label>Unité</label><input type="text" value="${esc(r.estimUnit||'')}" placeholder="km, €, fois..." onchange="setField('estimUnit',this.value)"></div>
+  </div>`;
+}
+
+function renderMediaForm(r) {
+  const hasMedia = r.media && (r.media.blobId || r.media.url);
+  return `<div class="form-section">
+    <div class="form-section-title">Média</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button class="btn btn-ghost btn-sm" onclick="triggerFileUpload()">📁 Fichier local</button>
+      <button class="btn btn-ghost btn-sm" onclick="promptURL()">🔗 URL externe</button>
+    </div>
+    ${hasMedia?`<div style="font-size:11px;color:var(--green);margin-bottom:8px;">✓ ${r.media.filename||r.media.url||'Média chargé'}</div>`:''}
+    ${r.type==='video_prediction'?`
+      <div class="row2">
+        <div class="field"><label>Pause à (s)</label><input type="number" step="0.1" value="${r.media?.pauseAt||0}" onchange="setMediaField('pauseAt',+this.value)"></div>
+        <div class="field"><label>Reprendre à (s)</label><input type="number" step="0.1" value="${r.media?.resumeAt||0}" onchange="setMediaField('resumeAt',+this.value)"></div>
+      </div>`:``}
+  </div>`;
+}
+
+function renderEffectsForm(r) {
+  const effects = ['zoom','blur','pixelate','crop','freeze'];
+  const cur = r.effects||[];
+  return `<div class="form-section">
+    <div class="form-section-title">Effets de révélation</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+      ${effects.map(ef=>`<div style="padding:5px 12px;border-radius:14px;border:1px solid ${cur.includes(ef)?'var(--purple)':'var(--border)'};background:${cur.includes(ef)?'rgba(199,125,255,.15)':'var(--s2)'};color:${cur.includes(ef)?'var(--purple)':'var(--dim)'};cursor:pointer;font-size:11px;" onclick="toggleEffect('${ef}')">${ef}</div>`).join('')}
+    </div>
+    ${cur.includes('zoom')?`<div class="field" style="margin-top:8px;"><label>Durée zoom (s)</label><input type="number" value="${r.zoomDuration||8}" min="2" max="30" onchange="setField('zoomDuration',+this.value)"></div>`:''}
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// FIELD SETTERS
+// ══════════════════════════════════════════════════════════════
+function setField(key, val) { if(rounds[activeIdx]) { rounds[activeIdx][key]=val; renderSidebar(); saveLocal(); } }
+function setMediaField(key, val) { if(!rounds[activeIdx].media) rounds[activeIdx].media={}; rounds[activeIdx].media[key]=val; saveLocal(); }
+function setAnswer(i, key, val) { rounds[activeIdx].answers[i][key]=val; saveLocal(); }
+function toggleCorrect(i) {
+  const r=rounds[activeIdx];
+  if(r.type==='majority') { r.answers.forEach((a,j)=>a.correct=(j===i)); }
+  else { r.answers[i].correct=!r.answers[i].correct; }
+  renderForm(); saveLocal();
+}
+function addAnswer() { rounds[activeIdx].answers.push({text:'',correct:false}); renderForm(); saveLocal(); }
+function removeAnswer(i) { rounds[activeIdx].answers.splice(i,1); renderForm(); saveLocal(); }
+function toggleEffect(ef) {
+  const r=rounds[activeIdx]; r.effects=r.effects||[];
+  const idx=r.effects.indexOf(ef);
+  if(idx>=0) r.effects.splice(idx,1); else r.effects.push(ef);
+  renderForm(); saveLocal();
+}
+
+// ══════════════════════════════════════════════════════════════
+// MEDIA
+// ══════════════════════════════════════════════════════════════
+function triggerFileUpload() { document.getElementById('file-input').click(); }
+
+function handleFileUpload(e) {
+  const file = e.target.files[0]; if(!file||activeIdx<0) return;
+  const blobId = 'blob_'+Date.now();
+  const url = URL.createObjectURL(file);
+  mediaBlobs[blobId] = url;
+  const r = rounds[activeIdx];
+  r.media = { type: file.type.split('/')[0], blobId, filename: file.name, url };
+  renderForm(); renderMediaPreview(); renderTimeline(); saveLocal();
+  e.target.value = '';
+}
+
+function promptURL() {
+  const url = prompt('URL du média (vidéo, image, audio) :');
+  if(!url||activeIdx<0) return;
+  const r = rounds[activeIdx];
+  const ext = url.split('.').pop().toLowerCase();
+  const type = ['mp4','webm','mov'].includes(ext)?'video':['jpg','jpeg','png','gif','webp'].includes(ext)?'image':'audio';
+  r.media = { type, url, filename: url.split('/').pop() };
+  renderForm(); renderMediaPreview(); renderTimeline(); saveLocal();
+}
+
+function renderMediaPreview() {
+  const r = rounds[activeIdx];
+  const vid = document.getElementById('preview-video');
+  const img = document.getElementById('preview-image');
+  const ph  = document.getElementById('preview-placeholder');
+  vid.style.display='none'; img.style.display='none'; ph.style.display='flex';
+  if(!r?.media) return;
+  const src = r.media.blobId ? mediaBlobs[r.media.blobId] : r.media.url;
+  if(!src) return;
+  ph.style.display='none';
+  if(r.media.type==='video') {
+    vid.src=src; vid.style.display='block'; vid.load();
+    vid.onloadedmetadata=()=>{ tlDuration=vid.duration; renderTimeline(); };
+  } else if(r.media.type==='image') {
+    img.src=src; img.style.display='block';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// TIMELINE
+// ══════════════════════════════════════════════════════════════
+function renderTimeline() {
+  const r = rounds[activeIdx];
+  if(!r) return;
+  const eventsRow = document.getElementById('tl-events-row');
+  const markersEl = document.getElementById('tl-markers');
+  const events = r.timeline || [];
+
+  // Events chips
+  eventsRow.innerHTML = events.length === 0
+    ? '<span style="font-size:11px;color:var(--dim);">Aucun marqueur — clique sur "Poser marqueur" pendant la lecture</span>'
+    : events.map((ev,i) => {
+        const meta = ACTION_META[ev.action] || {color:'#fff',label:ev.action};
+        return `<div class="tl-event-chip" style="background:${meta.color}22;border-color:${meta.color};color:${meta.color};" onclick="editMarker(${i})">
+          <span class="chip-time">${ev.at.toFixed(1)}s</span>
+          <span>${meta.label}</span>
+          <span class="chip-del" onclick="removeMarker(${i},event)">✕</span>
+        </div>`;
+      }).join('');
+
+  // Markers on scrubber
+  markersEl.innerHTML = events.map((ev,i) => {
+    if(!tlDuration) return '';
+    const pct = (ev.at / tlDuration * 100);
+    const meta = ACTION_META[ev.action] || {color:'#fff',label:ev.action};
+    return `<div class="tl-marker" style="left:${pct}%" title="${meta.label} @ ${ev.at}s">
+      <div class="tl-marker-line" style="background:${meta.color};opacity:.7;"></div>
+      <div class="tl-marker-label" style="background:${meta.color}33;color:${meta.color}">${ev.at.toFixed(1)}s</div>
+    </div>`;
+  }).join('');
+}
+
+function tlPlay() {
+  const vid = document.getElementById('preview-video');
+  const btn = document.getElementById('tl-play-btn');
+  if(!vid.src) return;
+  if(tlPlaying) {
+    vid.pause(); tlPlaying=false; btn.textContent='▶ Play'; btn.classList.remove('active');
+    clearInterval(tlInterval);
+  } else {
+    vid.play(); tlPlaying=true; btn.textContent='⏸ Pause'; btn.classList.add('active');
+    tlInterval = setInterval(updateTLHead, 100);
+  }
+}
+
+function tlStop() {
+  const vid = document.getElementById('preview-video');
+  const btn = document.getElementById('tl-play-btn');
+  vid.pause(); vid.currentTime=0; tlPlaying=false;
+  btn.textContent='▶ Play'; btn.classList.remove('active');
+  clearInterval(tlInterval);
+  updateTLHead();
+}
+
+function updateTLHead() {
+  const vid = document.getElementById('preview-video');
+  if(!vid.duration) return;
+  const pct = vid.currentTime / vid.duration * 100;
+  document.getElementById('tl-head').style.left = pct + '%';
+  document.getElementById('tl-progress').style.width = pct + '%';
+  document.getElementById('tl-time').textContent = vid.currentTime.toFixed(1) + 's';
+}
+
+let scrubbing = false;
+function tlScrubStart(e) {
+  scrubbing = true;
+  tlScrubMove(e);
+  document.addEventListener('mousemove', tlScrubMove);
+  document.addEventListener('touchmove', tlScrubMove, {passive:false});
+  document.addEventListener('mouseup', tlScrubEnd);
+  document.addEventListener('touchend', tlScrubEnd);
+}
+function tlScrubMove(e) {
+  if(!scrubbing) return;
+  e.preventDefault();
+  const scrubber = document.getElementById('tl-scrubber');
+  const rect = scrubber.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  const vid = document.getElementById('preview-video');
+  if(vid.duration) { vid.currentTime = pct * vid.duration; updateTLHead(); }
+}
+function tlScrubEnd() {
+  scrubbing = false;
+  document.removeEventListener('mousemove', tlScrubMove);
+  document.removeEventListener('touchmove', tlScrubMove);
+  document.removeEventListener('mouseup', tlScrubEnd);
+  document.removeEventListener('touchend', tlScrubEnd);
+}
+
+function addMarkerAtCurrent() {
+  const vid = document.getElementById('preview-video');
+  const t = vid.src ? parseFloat(vid.currentTime.toFixed(1)) : 0;
+  pendingMarkerTime = t;
+  document.getElementById('marker-time').value = t;
+  openModal('marker-modal');
+}
+
+function editMarker(i) {
+  const ev = rounds[activeIdx].timeline[i];
+  pendingMarkerTime = ev.at;
+  document.getElementById('marker-action').value = ev.action;
+  document.getElementById('marker-time').value = ev.at;
+  document.getElementById('marker-label').value = ev.label || '';
+  // Supprimer l'ancien et en créer un nouveau
+  rounds[activeIdx].timeline.splice(i, 1);
+  openModal('marker-modal');
+}
+
+function confirmMarker() {
+  if(activeIdx < 0) return;
+  const action = document.getElementById('marker-action').value;
+  const at = parseFloat(document.getElementById('marker-time').value) || 0;
+  const label = document.getElementById('marker-label').value;
+  rounds[activeIdx].timeline = rounds[activeIdx].timeline || [];
+  rounds[activeIdx].timeline.push({at, action, label});
+  rounds[activeIdx].timeline.sort((a,b) => a.at - b.at);
+  closeModal('marker-modal');
+  renderTimeline();
+  saveLocal();
+  showToast('Marqueur ajouté à ' + at + 's');
+}
+
+function removeMarker(i, e) {
+  e.stopPropagation();
+  rounds[activeIdx].timeline.splice(i, 1);
+  renderTimeline(); saveLocal();
+}
+
+// ══════════════════════════════════════════════════════════════
+// EXPORT / IMPORT / SAVE
+// ══════════════════════════════════════════════════════════════
+function getProject() {
+  return {
+    name: document.getElementById('project-name').value || 'Ma soirée',
+    version: '1.0',
+    created: new Date().toISOString(),
+    rounds: rounds.map(r => {
+      // Ne pas exporter les blobIds (non portables) — juste les URLs
+      const out = {...r};
+      if(out.media?.blobId) { out.media = {...out.media}; delete out.media.blobId; }
+      return out;
+    })
+  };
+}
+
+function exportJSON() {
+  const proj = getProject();
+  const blob = new Blob([JSON.stringify(proj, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (proj.name||'partie') + '.json';
+  a.click();
+  showToast('JSON exporté ✓');
+}
+
+function importJSON() { openModal('import-modal'); }
+
+function confirmImport() {
+  try {
+    const raw = document.getElementById('import-json').value;
+    const proj = JSON.parse(raw);
+    if(!proj.rounds) throw new Error('Pas de rounds');
+    rounds = proj.rounds;
+    document.getElementById('project-name').value = proj.name || 'Importé';
+    activeIdx = -1;
+    renderSidebar();
+    document.getElementById('editor-empty').style.display='flex';
+    document.getElementById('editor-content').style.display='none';
+    closeModal('import-modal');
+    saveLocal();
+    showToast(`${rounds.length} rounds importés ✓`);
+  } catch(e) {
+    showToast('JSON invalide : '+e.message);
+  }
+}
+
+function handleJSONImport(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => { document.getElementById('import-json').value = ev.target.result; openModal('import-modal'); };
+  reader.readAsText(file);
+}
+
+function saveLocal() {
+  try { localStorage.setItem('amusoir_studio', JSON.stringify(getProject())); } catch(e) {}
+}
+
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem('amusoir_studio');
+    if(!raw) return;
+    const proj = JSON.parse(raw);
+    if(proj.rounds?.length) {
+      rounds = proj.rounds;
+      document.getElementById('project-name').value = proj.name || 'Ma soirée';
+      renderSidebar();
+      showToast('Brouillon restauré ✓');
+    }
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════════════════
+// ENGINE LAUNCH
+// ══════════════════════════════════════════════════════════════
+function launchEngine() {
+  if(!rounds.length) { showToast('Ajoute au moins un round !'); return; }
+  const proj = getProject();
+  localStorage.setItem('amusoir_engine_project', JSON.stringify(proj));
+  // Stocker aussi les blob URLs séparément
+  const blobMap = {};
+  rounds.forEach(r => { if(r.media?.blobId && mediaBlobs[r.media.blobId]) blobMap[r.media.blobId] = mediaBlobs[r.media.blobId]; });
+  // Note: blob URLs ne survivent pas à un reload mais on ouvre dans le même contexte
+  localStorage.setItem('amusoir_engine_blobs_info', JSON.stringify(Object.keys(blobMap)));
+  window._amusoirBlobs = mediaBlobs;
+  window.open('amusoir-engine.html', '_blank');
+}
+
+function previewFull() {
+  if(activeIdx < 0) { showToast('Sélectionne un round !'); return; }
+  showToast('Prévisualisation : utilise les contrôles timeline →');
+}
+
+// ══════════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+loadLocal();
+renderSidebar();
+</script>
+</body>
+</html>
